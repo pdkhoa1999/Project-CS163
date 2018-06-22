@@ -1,45 +1,56 @@
 #pragma once
-#ifndef _function_h_
-#define _function_h_
-
-#include <iostream>
+#ifndef  _header_h_
+#define _header_h_
+#include<iostream>
+#include<fstream>
+#include<string>
+#include <Windows.h>
+#include <time.h>
 using namespace std;
-struct Node {
-	int data;
-	Node* next;
+
+//Loading
+struct pathNode {//contain data of a single word
+	//inverted index using Linked List
+	string path;
+	pathNode* pnext;
+	int occurance;
+	pathNode() { occurance = 0; }
 };
-class Set {
+struct wordNode {//one node in the wordtrie
+	pathNode*phead = NULL;
+	wordNode*children[26] = {};
+};
+struct wordTrie {
 private:
-	Node* head;
+	wordNode*root;
+	void printInternal(wordNode*root, string word);//test print
+	string takeWord(ifstream &fin, int &n);
+	bool search(string s, wordNode * root);
+
 public:
-	// initialize an empty set
-	void init();
-	// get number of elements in the current set (cardinality)
-	int count();
-	// add x to a set (if x has not existed in the set yet)
-	void add(int x);
-	// check whether x exists in the current set or not
-	bool exist(int x);
-	void remove(int x);
-	// print to console, in ascending order: {1, 5, 7}
-	void print();
-	// check whether the current set is a sub set of s
-	bool isSubSet(Set s);
-	// check whether the current set is a super set of s
-	bool isSuperSet(Set s);
-	// new set with elements from both current set and s
-	Set Union(Set s);
-	// new set with elements common to current set and s
-	Set intersection(Set s);
-	// new set with elements in current set but not in s
-	Set different(Set s);
-	// new set with elements in either current s or s but not both
-	Set symmetricDifference(Set s);
-	// new set from current s
-	Set clone();
-	// convert to an array
-	void toArray(int *a, int &n);
-	// remove all elements in the current s
-	void clear();
+	void print();//test print
+	wordTrie() { 
+		root = NULL;
+	}
+	void loadwordFile(string path);//load trie from wordfile
+	void add(string path);//add a file to wordttrie
+	bool search(string s)
+	{
+		return search(s, root);
+	}
 };
+//For searching
+//User will input a string -> we merge and split them into few blocks.
+
+struct keyword_block
+{
+	string s;
+	bool iscont = false;
+};
+
+//
+bool checkValidation(char x);//check if a valid char or not
+
+
+
 #endif
