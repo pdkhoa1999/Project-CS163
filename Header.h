@@ -47,6 +47,11 @@ struct keyword_block
 	string s;
 	bool iscont = false;
 };
+//To manage each keyword_block
+struct query
+{
+	keyword_block block[34]; //maximum we get 34 words
+};
 
 //
 bool checkValidation(char x);//check if a valid char or not
