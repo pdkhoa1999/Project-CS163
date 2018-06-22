@@ -45,6 +45,7 @@ public:
 struct keyword_block
 {
 	string s;
+	pathNode wordinfo ; //contain it's path and frequency
 };
 //To manage each keyword_block
 struct query
