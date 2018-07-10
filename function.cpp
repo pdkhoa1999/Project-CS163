@@ -169,3 +169,4 @@ void query::insert_queryInternal(string & s, wordTrie  root)
 		cout << block[i]->s << endl;
 	}
 }
+ 
