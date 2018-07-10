@@ -147,18 +147,20 @@ void query::insert_queryInternal(string & s, wordTrie  root,int & n)
 {
 	string trial, temp = " ";
 	wordNode * word_temp;
-	//split into meaning words
+	//Split 
 	for (int i = 0; i < s.length(); i++)
 	{
 		trial += s[i];
 		if (root.search(trial))
 		{
-			trial.insert(i, temp);
+			trial.insert(i+1, temp);
 		}
 	}
 	temp = "\0";
 	bool iscont = true;
 
+
+	//Merge 
 	for (int i = 0; i < trial.length() + 1; i++)
 	{
 		string prev = "\0";
