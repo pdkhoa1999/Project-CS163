@@ -78,8 +78,6 @@ string wordTrie::takeWord(ifstream &fin, int &n)
 	return word3;
 }
 
-
-
 void wordTrie::printInternal(wordNode*root, string word)
 {
 	if (root->phead != NULL)
@@ -117,10 +115,57 @@ bool wordTrie::search(string s, wordNode *root)
 		while (checkValidation(s[i]) && i<s.length())
 		{
 			if (cur == NULL)return false;
-			if (i==s.length()-1 && cur->phead != NULL)return true;
 			x = tolower(s[i]);
 			cur = cur->children[s[i] - 'a'];
 			i++;
+			if (i == s.length() && cur->phead != NULL)return true;
 		}
 		return false;
+}
+
+
+void query::insert_queryInternal(string & s, wordTrie  root)
+{
+	string trial, temp = " ";
+	int flag = 0;
+	//split into meaning words
+	for (int i = 0; i < s.length(); i++)
+	{
+		trial += s[i];
+		if (root.search(trial))
+		{
+			trial.insert(i, temp);
+		}
+	}
+	temp = "\0";
+	bool iscont = true;
+
+	for (int i = 0; i < trial.length() + 1; i++)
+	{
+		string prev = "\0";
+		//if(trial == stopword)iscont=false;
+		if (root.search(temp) && trial[i]!=' ')
+		{
+			block[flag] = new keyword_block();
+			block[flag]->s = temp;
+			flag++;
+		}
+		if (root.search(prev + temp) && prev != "\0")
+		{
+			block[flag] = new keyword_block();
+			block[flag]->s = prev + temp;
+			flag++;
+			block[flag]->isMerge = true; //merged word
+			iscont = true;
+			prev = temp;
+			temp = "\0";
+		}
+		if (trial[i] != ' ')temp += trial[i];
+	}
+
+	//Just print to test 
+	for (int i = 0; i < flag; i++)
+	{
+		cout << block[i]->s << endl;
+	}
 }
