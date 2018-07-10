@@ -118,7 +118,7 @@ bool wordTrie::search(string s, wordNode *root)
 			x = tolower(s[i]);
 			cur = cur->children[s[i] - 'a'];
 			i++;
-			if (i == s.length() && cur->phead != NULL)return true;
+			if (cur!=NULL && i == s.length() && cur->phead != NULL)return true;
 		}
 		return false;
 }
@@ -169,4 +169,3 @@ void query::insert_queryInternal(string & s, wordTrie  root)
 		cout << block[i]->s << endl;
 	}
 }
- 
