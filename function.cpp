@@ -277,8 +277,8 @@ void query::insert_queryInternal(string & s, wordTrie  root,int & n)
 			block[n] = new keyword_block();
 			block[n]->s = prev + temp;
 			block[n]->wordinfo = word_temp->phead; //upduate address
-			n++;
 			block[n]->isMerge = true; //merged word
+			n++;
 			iscont = true;
 			prev = temp;
 			temp = "\0";
