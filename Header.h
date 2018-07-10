@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <time.h>
 using namespace std;
+//HANDLE  hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
 //Loading
 struct pathNode {//contain data of a single word
@@ -17,7 +18,7 @@ struct pathNode {//contain data of a single word
 	pathNode() { occurance = 0; }
 };
 struct wordNode {//one node in the wordtrie
-	pathNode*phead = NULL;
+	pathNode*phead = NULL;  //pathHead;
 	wordNode*children[26] = {};
 };
 struct wordTrie {
@@ -44,19 +45,25 @@ public:
 
 struct keyword_block
 {
-	string s;
-	pathNode wordinfo ; //contain it's path and frequency
+	string s="a";
+	pathNode wordinfo; //contain address and it's frequency
+	bool isMerge = false; // For ranking higher
+	bool isFactor = false; // For ranking higher .From feature 
 };
 //To manage each keyword_block
 struct query
 {
-	query * q;
-	keyword_block block[34]; //maximum we get 34 words
-};
+public:
+	void insert_query(string & s,wordTrie  root)
+	{
+		insert_queryInternal(s, root);
+	}
+private:
+	keyword_block *block[34]; //maximum we get 34 keywords after split & merge & filter.
 
+	void insert_queryInternal(string & s,wordTrie  root);
+};
 //
 bool checkValidation(char x);//check if a valid char or not
-
-
-
+void print(string input, query * q);	
 #endif
