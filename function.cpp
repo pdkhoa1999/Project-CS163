@@ -227,7 +227,7 @@ wordNode* wordTrie::Findword(string s, wordNode * root)
 	wordNode * cur = root;
 	char x;
 	//function filter 
-	while (checkValidation(s[i]) && i<s.length())
+	while (checkValidation(s[i]) && i<s.length()+1)
 	{
 		if (cur == NULL)return NULL;
 		x = tolower(s[i]);
@@ -253,42 +253,67 @@ void query::insert_queryInternal(string & s, wordTrie  root,int & n)
 	}
 	temp = "\0";
 	bool iscont = true;
-
+	string prev = "\0";
 
 	//Merge 
-	for (int i = 0; i < trial.length() + 1; i++)
+	for (int i = 0; i < trial.length() ; i++)
 	{
-		string prev = "\0";
+		if (trial[i] != ' ')temp += trial[i];
+		else {
+			if (temp != "\0") {
+				prev = temp;
+				temp = "\0";
+			}
+		}
+
+		
 		word_temp = root.Findword(temp);
 		//if(trial == stopword)iscont=false;
-		
-		if (word_temp!=NULL && trial[i]!=' ')
+
+		if (word_temp != NULL && trial[i] != ' ' && !word_exist(temp))
 		{
-			block[n] = new keyword_block();
-			block[n]->s = temp;
+
+			block[n].s = temp;
+			prev += temp;
+			temp = "\0";
 			//upduate address
-			block[n]->wordinfo = word_temp->phead;
+			block[n].wordinfo = word_temp->phead;
 			n++;
 		}
 
 		word_temp = root.Findword(prev + temp);
-		if (word_temp!=NULL && prev != "\0")
+		if (temp!="" && word_temp != NULL && !word_exist(prev+temp))
 		{
-			block[n] = new keyword_block();
-			block[n]->s = prev + temp;
-			block[n]->wordinfo = word_temp->phead; //upduate address
-			block[n]->isMerge = true; //merged word
+			block[n].s = prev + temp;
+			block[n].wordinfo = word_temp->phead; //upduate address
+			block[n].isMerge = true; //merged word
 			n++;
 			iscont = true;
-			prev = temp;
+			prev += temp;
 			temp = "\0";
 		}
-		if (trial[i] != ' ')temp += trial[i];
+		else
+		{
+			word_temp = root.Findword(prev);
+			if (word_temp != NULL && trial[i] != ' '&& !word_exist(prev))
+			{
+				block[n].s = prev;
+				//upduate address
+				block[n].wordinfo = word_temp->phead;
+				n++;
+			}
+		}
 	}
 
 	//Just print to test 
 	for (int i = 0; i < n; i++)
 	{
-		cout << block[i]->s <<" " << block[i]->wordinfo->occurance<<" "<<block[i]->wordinfo->path << endl;
+		cout << block[i].s <<" " << block[i].wordinfo->occurance<<" "<<block[i].wordinfo->path << endl;
 	}
+}
+bool query::word_exist(string s, int n, keyword_block * block)
+{
+	for (int i = 0; i < n; i++)
+		if (block[i].s == s)return true;
+	return false;
 }
