@@ -73,11 +73,15 @@ public:
 	{
 		insert_queryInternal(s, root,num);
 	}
-
+	bool word_exist(string s)
+	{
+		return word_exist(s, num, block);
+	}
 private:
-	keyword_block *block[34]; //maximum we get 34 keywords after split & merge & filter.
+	keyword_block block[34]; //maximum we get 34 keywords after split & merge & filter.
 	int num;   
 	void insert_queryInternal(string & s,wordTrie  root,int & n);
+	bool word_exist(string s, int n, keyword_block block[]);
 };
 //
 bool checkValidation(char x);//check if a valid char or not
