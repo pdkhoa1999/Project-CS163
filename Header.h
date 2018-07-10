@@ -6,6 +6,7 @@
 #include<string>
 #include <Windows.h>
 #include <time.h>
+#include <filesystem>
 using namespace std;
 //HANDLE  hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -19,7 +20,12 @@ struct pathNode {//contain data of a single word
 };
 struct wordNode {//one node in the wordtrie
 	pathNode*phead = NULL;  //pathHead;
+	int n = 0;
 	wordNode*children[26] = {};
+	wordNode()
+	{
+		n = 0;
+	}
 };
 struct wordTrie {
 private:
@@ -28,14 +34,17 @@ private:
 	string takeWord(ifstream &fin, int &n);
 	bool search(string s, wordNode * root);
 	wordNode* Findword(string s, wordNode * root);
-
+	void saveInternal(ofstream &fout, wordNode*root, string word);
 public:
-	void print();//test print
-	wordTrie() { 
+	wordTrie() {
 		root = NULL;
 	}
+
+	void print();//test print
 	void loadwordFile(string path);//load trie from wordfile
 	void add(string path);//add a file to wordttrie
+	void savewordFile();//save trie to word file
+
 	bool search(string s)
 	{
 		return search(s, root);
@@ -58,19 +67,18 @@ struct query
 public:
 	query()
 	{
-		n = 0;
+		num = 0;
 	}
 	void insert_query(string & s,wordTrie  root)
 	{
-		insert_queryInternal(s, root,n);
+		insert_queryInternal(s, root,num);
 	}
 
 private:
 	keyword_block *block[34]; //maximum we get 34 keywords after split & merge & filter.
-	int n;   
+	int num;   
 	void insert_queryInternal(string & s,wordTrie  root,int & n);
 };
 //
 bool checkValidation(char x);//check if a valid char or not
-void print(string input, query * q);	
 #endif
