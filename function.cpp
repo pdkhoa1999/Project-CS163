@@ -122,12 +122,31 @@ bool wordTrie::search(string s, wordNode *root)
 		}
 		return false;
 }
+wordNode* wordTrie::Findword(string s)
+{
+	return Findword(s, root);
+}
+wordNode* wordTrie::Findword(string s, wordNode * root)
+{
+	int i = 0;
+	wordNode * cur = root;
+	char x;
+	//function filter 
+	while (checkValidation(s[i]) && i<s.length())
+	{
+		if (cur == NULL)return NULL;
+		x = tolower(s[i]);
+		cur = cur->children[s[i] - 'a'];
+		i++;
+		if (cur != NULL && i == s.length() && cur->phead != NULL)return cur;
+	}
+	return NULL;
+}
 
-
-void query::insert_queryInternal(string & s, wordTrie  root)
+void query::insert_queryInternal(string & s, wordTrie  root,int & n)
 {
 	string trial, temp = " ";
-	int flag = 0;
+	wordNode * word_temp;
 	//split into meaning words
 	for (int i = 0; i < s.length(); i++)
 	{
@@ -143,19 +162,26 @@ void query::insert_queryInternal(string & s, wordTrie  root)
 	for (int i = 0; i < trial.length() + 1; i++)
 	{
 		string prev = "\0";
+		word_temp = root.Findword(temp);
 		//if(trial == stopword)iscont=false;
-		if (root.search(temp) && trial[i]!=' ')
+		
+		if (word_temp!=NULL && trial[i]!=' ')
 		{
-			block[flag] = new keyword_block();
-			block[flag]->s = temp;
-			flag++;
+			block[n] = new keyword_block();
+			block[n]->s = temp;
+			//upduate address
+			block[n]->wordinfo = word_temp->phead;
+			n++;
 		}
-		if (root.search(prev + temp) && prev != "\0")
+
+		word_temp = root.Findword(prev + temp);
+		if (word_temp!=NULL && prev != "\0")
 		{
-			block[flag] = new keyword_block();
-			block[flag]->s = prev + temp;
-			flag++;
-			block[flag]->isMerge = true; //merged word
+			block[n] = new keyword_block();
+			block[n]->s = prev + temp;
+			block[n]->wordinfo = word_temp->phead; //upduate address
+			n++;
+			block[n]->isMerge = true; //merged word
 			iscont = true;
 			prev = temp;
 			temp = "\0";
@@ -164,8 +190,8 @@ void query::insert_queryInternal(string & s, wordTrie  root)
 	}
 
 	//Just print to test 
-	for (int i = 0; i < flag; i++)
+	for (int i = 0; i < n; i++)
 	{
-		cout << block[i]->s << endl;
+		cout << block[i]->s <<" " << block[i]->wordinfo->occurance<<" "<<block[i]->wordinfo->path << endl;
 	}
 }
