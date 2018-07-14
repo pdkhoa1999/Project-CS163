@@ -14,13 +14,13 @@ using namespace std;
 struct pathNode {//contain data of a single word
 	//inverted index using Linked List
 	string path;
-	pathNode* pnext;
+	pathNode* pnext;    
 	int occurance;
 	pathNode() { occurance = 0; }
 };
 struct wordNode {//one node in the wordtrie
 	pathNode*phead = NULL;  //pathHead;
-	int n = 0;
+	int n = 0;    //number of file
 	wordNode*children[26] = {};
 	wordNode()
 	{
@@ -54,12 +54,48 @@ public:
 //For searching
 //User will input a string -> we merge and split them into few blocks.
 
+//Stopword
+// Stopwords for feature 
+struct Node
+{
+	string s;
+	Node *next;
+	Node()
+	{
+		next = NULL;
+	}
+};
+class LinkedList
+{
+private:
+	Node * head;
+	void InsertWords(string s, Node *&cur);
+	Node* FindWord(string s, Node*cur);
+public:
+	LinkedList()
+	{
+		head = NULL;
+	}
+	void RunInsertWords(string s);
+	Node* RunFindWord(string s);
+};
+struct StopWordChaining
+{
+private:
+	LinkedList arr[420];
+
+public:
+	void RuncreateChaining();
+	bool isStopWord(string s);
+	int HashWord(string s);
+};
+
+//query
 struct keyword_block
 {
 	string s;
 	pathNode *wordinfo; //contain address and it's frequency
-	bool isMerge = false; // For ranking higher
-	bool isFactor = false; // For ranking higher .From feature 
+	RankingSystem rank;   
 };
 //To manage each keyword_block
 struct query
@@ -69,9 +105,9 @@ public:
 	{
 		num = 0;
 	}
-	void insert_query(string & s,wordTrie  root)
+	void insert_query(string & s,wordTrie  root,StopWordChaining stopword)
 	{
-		insert_queryInternal(s, root,num);
+		insert_queryInternal(s, root,num,stopword);
 	}
 	bool word_exist(string s)
 	{
@@ -79,10 +115,32 @@ public:
 	}
 private:
 	keyword_block block[34]; //maximum we get 34 keywords after split & merge & filter.
-	int num;   
-	void insert_queryInternal(string & s,wordTrie  root,int & n);
-	bool word_exist(string s, int n, keyword_block block[]);
+	int num=0;   
+	void insert_queryInternal(string & s,wordTrie  root,int & n,StopWordChaining stopword);
+	bool word_exist(string s, int n, keyword_block * block);
 };
 //
+
+class RankingSystem
+{
+private:
+	bool isAnd(string s);// Feature 1
+	bool isOr(string s);//Feature 2
+	bool isMinus(string s);// Feature 3
+	bool isIntitle(string s);// Feature 4
+	bool isFile(string s);//Feature 6
+	bool isPrice(string s);//Feature 7
+	bool isHashtags(string s); //Feature 8	
+	bool isMatch(string s); // Feature 9(uncompleted!!)
+	bool isWildCard(string s); // Feature 10
+	bool isInRange(string s); // Feature 11
+
+
+public:
+	void isFeature(string s);
+};
+//
+void ToLower(string & s);
+bool StringCompare(string s1, string s2);
 bool checkValidation(char x);//check if a valid char or not
 #endif
