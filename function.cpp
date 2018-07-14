@@ -235,74 +235,71 @@ wordNode* wordTrie::Findword(string s, wordNode * root)
 		i++;
 		if (cur != NULL && i == s.length() && cur->phead != NULL)return cur;
 	}
-	return NULL;
+	return NULL;	
 }
 
-void query::insert_queryInternal(string & s, wordTrie  root,int & n)
+void query::insert_queryInternal(string & s, wordTrie root,int & n,StopWordChaining stopword)
 {
-	string trial, temp = " ";
-	wordNode * word_temp;
-	//Split 
-	for (int i = 0; i < s.length(); i++)
+	string temp,ismeaning,prev="\0";
+	bool isconnected = false;
+	ismeaning.clear();
+	wordNode *word_temp = NULL;
+	for (int i = 0; i < s.length() + 1; i++)
 	{
-		trial += s[i];
-		if (root.search(trial))
-		{
-			trial.insert(i+1, temp);
-		}
-	}
-	temp = "\0";
-	bool iscont = true;
-	string prev = "\0";
 
-	//Merge 
-	for (int i = 0; i < trial.length() ; i++)
-	{
-		if (trial[i] != ' ')temp += trial[i];
-		else {
-			if (temp != "\0") {
-				prev = temp;
-				temp = "\0";
+		if ((s[i] == ' ' || i == s.length()))
+		{
+			if (stopword.isStopWord(temp))
+			{
+				prev.clear();
+				temp.clear();
 			}
-		}
+			else {
+				word_temp = root.Findword(temp);
+				if (!stopword.isStopWord(temp) && word_temp != NULL)
+				{
+					block[n].s = temp;
+					block[n].wordinfo = word_temp->phead;
+					n++;
+				}
+				for (int j = 0; j < temp.length() + 1; j++)
+				{
 
-		
-		word_temp = root.Findword(temp);
-		//if(trial == stopword)iscont=false;
+					ismeaning += temp[j];
+					if (prev != "\0" && ismeaning != "") {
+						word_temp = root.Findword(prev + ismeaning);
+						if (!stopword.isStopWord(prev + ismeaning) && word_temp != NULL && !word_exist(prev + ismeaning) && prev + ismeaning != "")
+						{
+							block[n].s = prev + ismeaning;
+							block[n].wordinfo = word_temp->phead;
+							if (!root.search(ismeaning) && !stopword.isStopWord(ismeaning) && !word_exist(ismeaning)) {
+								block[n].isMerge = true;
+							}
+							else
+								block[n].isAnd = true;
+							prev += ismeaning;
+							ismeaning.clear();
+							n++;
+						}
+					}
+					word_temp = root.Findword(ismeaning);
+					if (!stopword.isStopWord(ismeaning) && word_temp != NULL && !word_exist(ismeaning) && ismeaning != "")
+					{
+						block[n].s = ismeaning;
+						block[n].wordinfo = word_temp->phead;
+						block[n].isAnd = true;
+						prev = ismeaning;
+						ismeaning.clear();
+						n++;
+					}
 
-		if (word_temp != NULL && trial[i] != ' ' && !word_exist(temp))
-		{
-
-			block[n].s = temp;
-			prev += temp;
-			temp = "\0";
-			//upduate address
-			block[n].wordinfo = word_temp->phead;
-			n++;
-		}
-
-		word_temp = root.Findword(prev + temp);
-		if (temp!="" && word_temp != NULL && !word_exist(prev+temp))
-		{
-			block[n].s = prev + temp;
-			block[n].wordinfo = word_temp->phead; //upduate address
-			block[n].isMerge = true; //merged word
-			n++;
-			iscont = true;
-			prev += temp;
-			temp = "\0";
+				}
+			}
+			ismeaning.clear();
+			temp.clear();
 		}
 		else
-		{
-			word_temp = root.Findword(prev);
-			if (word_temp != NULL && trial[i] != ' '&& !word_exist(prev))
-			{
-				block[n].s = prev;
-				//upduate address
-				block[n].wordinfo = word_temp->phead;
-				n++;
-			}
-		}
+			temp += s[i];
 	}
 
 	//Just print to test 
@@ -317,3 +314,208 @@ bool query::word_exist(string s, int n, keyword_block * block)
 		if (block[i].s == s)return true;
 	return false;
 }
+
+//Stopword
+void LinkedList::InsertWords(string s, Node *&cur)
+{
+	if (cur == NULL)
+	{
+		cur = new Node;
+		cur->s = s;
+		return;
+	}
+	else return InsertWords(s, cur->next);
+}
+void LinkedList::RunInsertWords(string s)
+{
+	InsertWords(s, head);
+}
+void StopWordChaining::RuncreateChaining()
+{
+	ifstream fin;
+
+	fin.open("Stopwords.txt");
+	if (!fin.good())
+	{
+		cout << " Stopword.txt ERROR!!";
+		exit(1);
+	}
+	while (!fin.eof())
+	{
+		string s;
+		getline(fin, s, '\n');
+		arr[HashWord(s)].RunInsertWords(s);
+	}
+
+
+	fin.close();
+	return;
+}
+int StopWordChaining::HashWord(string s)
+{
+	int t = s.length(), index = 0;
+	for (int i = 0; i<t; i++)
+	{
+		index += s[i];
+	}
+	index = index % 419;
+
+	return index;
+}
+bool StopWordChaining::isStopWord(string s)
+{
+	if (arr[HashWord(s)].RunFindWord(s) != NULL) return true;
+
+
+	return false;
+}
+
+Node* LinkedList::FindWord(string s, Node*cur)
+{
+	if (cur == NULL) return NULL;
+	if (StringCompare(s, cur->s))
+	{
+		return cur;
+	}
+	else return FindWord(s, cur->next);
+}
+
+Node* LinkedList::RunFindWord(string s)
+{
+	ToLower(s);
+	return FindWord(s, head);
+
+}
+
+bool StringCompare(string s1, string s2)
+{
+
+	for (int i = 0; i < s1.size(); i++)
+		s1[i] = toupper(s1[i]);
+
+	for (int i = 0; i < s2.size(); i++)
+		s2[i] = toupper(s2[i]);
+
+	if (s1.compare(s2) == 0)
+	{
+		return true;
+	}
+
+	return false;
+}
+void ToLower(string & s)
+{
+	for (int i = 0; i < s.length(); i++) tolower(s[i]);
+	return;
+}
+
+
+// Feature 1
+bool RankingSystem::isAnd(string s)
+{
+	if (StringCompare(s, "and") || s.find("+") != std::string::npos) return true;
+	else return false;
+
+}
+//Feature 2
+bool RankingSystem::isOr(string s)
+{
+	if (StringCompare(s, "or")) return true;
+	else return false;
+
+}
+// Feature 3
+bool RankingSystem::isMinus(string s)
+{
+	if (s.find("-") != std::string::npos) return true;
+	else return false;
+}
+// Feature 4
+bool RankingSystem::isIntitle(string s)
+{
+	if (s.find("intitle") != std::string::npos) return true;
+	else return false;
+
+}
+//Feature 6
+bool RankingSystem::isFile(string s)
+{
+	if (s.find(".txt") != std::string::npos || s.find(":txt") != std::string::npos) return true;
+	else return false;
+}
+//Feature 7
+bool RankingSystem::isPrice(string s)
+{
+	if (s.find("$") != std::string::npos) return true;
+	else return false;
+}
+//Feature 8
+bool RankingSystem::isHashtags(string s)
+{
+	if (s.find("#") != std::string::npos) return true;
+	else return false;
+}
+// Feature 9
+bool RankingSystem::isMatch(string s)
+{
+	return false;
+}
+// Feature 10
+bool RankingSystem::isWildCard(string s)
+{
+	if (s.find("*") != std::string::npos) return true;
+	else return false;
+}
+// Feature 11
+bool RankingSystem::isInRange(string s)
+{
+	if (s.find("..") != std::string::npos) return true;
+	else return false;
+}
+
+void RankingSystem::isFeature(string s)
+{
+	ToLower(s);
+	if (isAnd(s))
+	{
+		cout << "And\n";
+	}
+	if (isOr(s))
+	{
+		cout << "Or\n";
+	}
+	if (isMinus(s))
+	{
+		cout << "Minus\n";
+	}
+	if (isIntitle(s))
+	{
+		cout << "Intitle\n";
+	}
+	if (isFile(s))
+	{
+		cout << "File\n";
+	}
+	if (isPrice(s))
+	{
+		cout << "Price\n";
+	}
+	if (isHashtags(s))
+	{
+		cout << "Hashtags\n";
+	}
+	if (isMatch(s))
+	{
+		cout << "Match\n";
+	}
+	if (isWildCard(s))
+	{
+		cout << "Wildcard\n";
+	}
+	if (isInRange(s))
+	{
+		cout << "In range\n";
+	}
+	return;
+}
+//////////////////////////////////////////////////
