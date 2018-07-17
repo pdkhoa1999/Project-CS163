@@ -246,15 +246,18 @@ void query::insert_queryInternal(string & s, wordTrie root,int & n,StopWordChain
 	wordNode *word_temp = NULL;
 	for (int i = 0; i < s.length() + 1; i++)
 	{
-
+		//Lấy từ đến dấu " " . temp là từ đc lấy. s là từ gốc
 		if ((s[i] == ' ' || i == s.length()))
 		{
+// PRE-CHECK ....KHÚC CẦN BỔ SUNG FEATURE.CẬP NHẬT CÁC FEATURE CỦA MỖI KEYWORD_BLOCK.
+			// Nếu stopword -> clear temp -> out luôn
 			if (stopword.isStopWord(temp))
 			{
 				prev.clear();
 				temp.clear();
 			}
 			else {
+			// Nếu từ đó có nghĩa -> lưu vô 
 				word_temp = root.Findword(temp);
 				if (!stopword.isStopWord(temp) && word_temp != NULL)
 				{
@@ -262,26 +265,34 @@ void query::insert_queryInternal(string & s, wordTrie root,int & n,StopWordChain
 					block[n].wordinfo = word_temp->phead;
 					n++;
 				}
+			// Tìm các từ có nghĩa trong temp. 
+			//Ví dụ: temp = saved ,save vẫn có nghĩa nên phải lấy từ save ra.
 				for (int j = 0; j < temp.length() + 1; j++)
 				{
-
+					// ísmeaning là string được xét.
+					// Nếu ismeaning có nghĩa -> lưu ismeaning -> lưu prev = ismeaning -> clear ismeaning 
 					ismeaning += temp[j];
 					if (prev != "\0" && ismeaning != "") {
+						// Điều kiện này chỉ có tác dụng 
+						// Từ này dc prev + ismeaning -> Nếu đúng => is_Merge = true
 						word_temp = root.Findword(prev + ismeaning);
 						if (!stopword.isStopWord(prev + ismeaning) && word_temp != NULL && !word_exist(prev + ismeaning) && prev + ismeaning != "")
 						{
 							block[n].s = prev + ismeaning;
 							block[n].wordinfo = word_temp->phead;
 							if (!root.search(ismeaning) && !stopword.isStopWord(ismeaning) && !word_exist(ismeaning)) {
+								// is_Merge là 2 từ có nghĩa ghép lại dc 1 từ có nghĩa
+								// Ví dụ: fire word -> prev=fire ,ismeaning =work => is_Merge=true;
 								block[n].rank.is_Merge = true;
 							}
-							else
-								block[n].rank.is_And = true;
+							else 
+								block[n].rank.is_And = true;  // Ví dụ: prev = sa ,ismeaning = ve -> prev+ismeaning = save 
 							prev += ismeaning;
 							ismeaning.clear();
 							n++;
 						}
 					}
+					// Trường hợp bình thường,do lấy từ đén khi gặp dấu " " => isAnd = true.
 					word_temp = root.Findword(ismeaning);
 					if (!stopword.isStopWord(ismeaning) && word_temp != NULL && !word_exist(ismeaning) && ismeaning != "")
 					{
