@@ -273,10 +273,10 @@ void query::insert_queryInternal(string & s, wordTrie root,int & n,StopWordChain
 							block[n].s = prev + ismeaning;
 							block[n].wordinfo = word_temp->phead;
 							if (!root.search(ismeaning) && !stopword.isStopWord(ismeaning) && !word_exist(ismeaning)) {
-								block[n].isMerge = true;
+								block[n].rank.is_Merge = true;
 							}
 							else
-								block[n].isAnd = true;
+								block[n].rank.is_And = true;
 							prev += ismeaning;
 							ismeaning.clear();
 							n++;
@@ -287,7 +287,7 @@ void query::insert_queryInternal(string & s, wordTrie root,int & n,StopWordChain
 					{
 						block[n].s = ismeaning;
 						block[n].wordinfo = word_temp->phead;
-						block[n].isAnd = true;
+						block[n].rank.is_And= true;
 						prev = ismeaning;
 						ismeaning.clear();
 						n++;
