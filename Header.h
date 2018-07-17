@@ -89,7 +89,35 @@ public:
 	bool isStopWord(string s);
 	int HashWord(string s);
 };
-
+//ranking
+class RankingSystem
+{
+public:
+	bool is_Merge;
+	bool is_And;// Feature 1
+	bool is_Or;//Feature 2
+	bool is_Minus;// Feature 3
+	bool is_Intitle;// Feature 4
+	bool is_File;//Feature 6
+	bool is_Price;//Feature 7
+	bool is_Hashtags; //Feature 8	
+	bool is_Match; // Feature 9(uncompleted!!)
+	bool is_WildCard; // Feature 10
+	bool is_InRange; // Feature 11
+///////////// Function
+	bool isAnd(string s);// Feature 1
+	bool isOr(string s);//Feature 2
+	bool isMinus(string s);// Feature 3
+	bool isIntitle(string s);// Feature 4
+	bool isFile(string s);//Feature 6
+	bool isPrice(string s);//Feature 7
+	bool isHashtags(string s); //Feature 8	
+	bool isMatch(string s); // Feature 9(uncompleted!!)
+	bool isWildCard(string s); // Feature 10
+	bool isInRange(string s); // Feature 11
+	void isFeature(string s);
+};
+////////////////////////
 //query
 struct keyword_block
 {
@@ -118,26 +146,6 @@ private:
 	int num=0;   
 	void insert_queryInternal(string & s,wordTrie  root,int & n,StopWordChaining stopword);
 	bool word_exist(string s, int n, keyword_block * block);
-};
-//
-
-class RankingSystem
-{
-private:
-	bool isAnd(string s);// Feature 1
-	bool isOr(string s);//Feature 2
-	bool isMinus(string s);// Feature 3
-	bool isIntitle(string s);// Feature 4
-	bool isFile(string s);//Feature 6
-	bool isPrice(string s);//Feature 7
-	bool isHashtags(string s); //Feature 8	
-	bool isMatch(string s); // Feature 9(uncompleted!!)
-	bool isWildCard(string s); // Feature 10
-	bool isInRange(string s); // Feature 11
-
-
-public:
-	void isFeature(string s);
 };
 //
 void ToLower(string & s);
