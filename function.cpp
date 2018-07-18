@@ -238,86 +238,75 @@ wordNode* wordTrie::Findword(string s, wordNode * root)
 	return NULL;	
 }
 
-void query::insert_queryInternal(string & s, wordTrie root,int & n,StopWordChaining stopword)
+//Query
+bool query::word_exist(string s)
 {
-	string temp,ismeaning,prev="\0";
-	bool isconnected = false;
-	ismeaning.clear();
-	wordNode *word_temp = NULL;
+	return word_exist(s, num, block);
+}
+void query::load_Query(string & s)
+{
+	load_QueryInternal(s, num);
+}
+void query::insert_Query(string s, int pos)
+{
+	insert_QueryInternal(s, num);
+}
+int query::find_Query(string s)
+{
+	find_QueryInternal(s, num);
+}
+void query::remove_Query(string s)
+{
+	remove_QueryInternal(s, num);
+}
+
+void query::load_QueryInternal(string & s,int & n)
+{
+	string temp;
 	for (int i = 0; i < s.length() + 1; i++)
 	{
-		//Lấy từ đến dấu " " . temp là từ đc lấy. s là từ gốc
-		if ((s[i] == ' ' || i == s.length()))
+		if (s[i] == ' ' || i == s.length())
 		{
-// PRE-CHECK ....KHÚC CẦN BỔ SUNG FEATURE.CẬP NHẬT CÁC FEATURE CỦA MỖI KEYWORD_BLOCK.
-			// Nếu stopword -> clear temp -> out luôn
-			if (stopword.isStopWord(temp))
-			{
-				prev.clear();
-				temp.clear();
-			}
-			else {
-			// Nếu từ đó có nghĩa -> lưu vô 
-				word_temp = root.Findword(temp);
-				if (!stopword.isStopWord(temp) && word_temp != NULL)
-				{
-					block[n].s = temp;
-					block[n].wordinfo = word_temp->phead;
-					n++;
-				}
-			// Tìm các từ có nghĩa trong temp. 
-			//Ví dụ: temp = saved ,save vẫn có nghĩa nên phải lấy từ save ra.
-				for (int j = 0; j < temp.length() + 1; j++)
-				{
-					// ísmeaning là string được xét.
-					// Nếu ismeaning có nghĩa -> lưu ismeaning -> lưu prev = ismeaning -> clear ismeaning 
-					ismeaning += temp[j];
-					if (prev != "\0" && ismeaning != "") {
-						// Điều kiện này chỉ có tác dụng 
-						// Từ này dc prev + ismeaning -> Nếu đúng => is_Merge = true
-						word_temp = root.Findword(prev + ismeaning);
-						if (!stopword.isStopWord(prev + ismeaning) && word_temp != NULL && !word_exist(prev + ismeaning) && prev + ismeaning != "")
-						{
-							block[n].s = prev + ismeaning;
-							block[n].wordinfo = word_temp->phead;
-							if (!root.search(ismeaning) && !stopword.isStopWord(ismeaning) && !word_exist(ismeaning)) {
-								// is_Merge là 2 từ có nghĩa ghép lại dc 1 từ có nghĩa
-								// Ví dụ: fire word -> prev=fire ,ismeaning =work => is_Merge=true;
-								block[n].rank.is_Merge = true;
-							}
-							else 
-								block[n].rank.is_And = true;  // Ví dụ: prev = sa ,ismeaning = ve -> prev+ismeaning = save 
-							prev += ismeaning;
-							ismeaning.clear();
-							n++;
-						}
-					}
-					// Trường hợp bình thường,do lấy từ đén khi gặp dấu " " => isAnd = true.
-					word_temp = root.Findword(ismeaning);
-					if (!stopword.isStopWord(ismeaning) && word_temp != NULL && !word_exist(ismeaning) && ismeaning != "")
-					{
-						block[n].s = ismeaning;
-						block[n].wordinfo = word_temp->phead;
-						block[n].rank.is_And= true;
-						prev = ismeaning;
-						ismeaning.clear();
-						n++;
-					}
-
-				}
-			}
-			ismeaning.clear();
+			block[n].s = temp;
+			n++;
 			temp.clear();
 		}
 		else
 			temp += s[i];
 	}
-
 	//Just print to test 
 	for (int i = 0; i < n; i++)
 	{
-		cout << block[i].s <<" " << block[i].wordinfo->occurance<<" "<<block[i].wordinfo->path << endl;
+		cout << block[i].s << endl;
 	}
+}
+void query::insert_QueryInternal(string s,int pos,int & n)
+{
+	n++;
+	int temp;
+	for (int i = n; i > pos; i--)
+	{
+		block[i].s = block[i - 1].s;
+	}
+	block[pos].s = s;
+}
+int query::find_QueryInternal(string s, int n)
+{
+	for (int i = 0; i < n; i++)
+	{
+		if (s == block[i].s)
+			return i;
+	}
+	return -1;
+}
+void query::remove_QueryInternal(string s, int &n)
+{
+	int pos = find_Query(s);
+	for (int i = pos; i < n; i++)
+	{
+		block[i].s = block[i + 1].s;
+	}
+	n--;
 }
 bool query::word_exist(string s, int n, keyword_block * block)
 {
