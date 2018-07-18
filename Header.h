@@ -133,18 +133,18 @@ public:
 	{
 		num = 0;
 	}
-	void insert_query(string & s,wordTrie  root,StopWordChaining stopword)
-	{
-		insert_queryInternal(s, root,num,stopword);
-	}
-	bool word_exist(string s)
-	{
-		return word_exist(s, num, block);
-	}
+	void load_Query(string & s);
+	void insert_Query(string s,int pos);
+	void remove_Query(string s);
+	int find_Query(string s); // return block position 
+	bool word_exist(string s);
 private:
 	keyword_block block[34]; //maximum we get 34 keywords after split & merge & filter.
 	int num=0;   
-	void insert_queryInternal(string & s,wordTrie  root,int & n,StopWordChaining stopword);
+	void load_QueryInternal(string & s,int & n);
+	void insert_QueryInternal(string s,int pos,int & n);
+	void remove_QueryInternal(string s, int &n);
+	int find_QueryInternal(string s, int n);
 	bool word_exist(string s, int n, keyword_block * block);
 };
 //
