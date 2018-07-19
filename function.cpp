@@ -249,15 +249,15 @@ void query::load_Query(string & s)
 }
 void query::insert_Query(string s, int pos)
 {
-	insert_QueryInternal(s, num);
+	insert_QueryInternal(s,pos,num);
 }
 int query::find_Query(string s)
 {
-	find_QueryInternal(s, num);
+	return find_QueryInternal(s, num);
 }
-void query::remove_Query(string s)
+void query::remove_Query(int pos)
 {
-	remove_QueryInternal(s, num);
+	remove_QueryInternal(pos, num);
 }
 
 void query::load_QueryInternal(string & s,int & n)
@@ -273,11 +273,6 @@ void query::load_QueryInternal(string & s,int & n)
 		}
 		else
 			temp += s[i];
-	}
-	//Just print to test 
-	for (int i = 0; i < n; i++)
-	{
-		cout << block[i].s << endl;
 	}
 }
 void query::insert_QueryInternal(string s,int pos,int & n)
@@ -299,9 +294,8 @@ int query::find_QueryInternal(string s, int n)
 	}
 	return -1;
 }
-void query::remove_QueryInternal(string s, int &n)
+void query::remove_QueryInternal(int pos, int &n)
 {
-	int pos = find_Query(s);
 	for (int i = pos; i < n; i++)
 	{
 		block[i].s = block[i + 1].s;
@@ -315,6 +309,20 @@ bool query::word_exist(string s, int n, keyword_block * block)
 	return false;
 }
 
+void query:: PrintToTest()
+{
+	for (int i = 0; i < num; i++)
+	{
+		cout << block[i].s << " ";
+	}
+
+	return;
+}
+void query::ShowPrint()
+{
+	PrintToTest();
+	return;
+}
 //Stopword
 void LinkedList::InsertWords(string s, Node *&cur)
 {
