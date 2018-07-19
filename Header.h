@@ -123,6 +123,7 @@ struct keyword_block
 {
 	string s;
 	pathNode *wordinfo; //contain address and it's frequency
+	int isFeature = 0; // from 1 to  12 kind of feature , if 0 , it's not
 	RankingSystem rank;   
 };
 //To manage each keyword_block
@@ -135,17 +136,23 @@ public:
 	}
 	void load_Query(string & s);
 	void insert_Query(string s,int pos);
-	void remove_Query(string s);
+	void remove_Query(int pos);
 	int find_Query(string s); // return block position 
 	bool word_exist(string s);
+	void process_Query(string s);
+	// Function test
+	void ShowPrint();
 private:
 	keyword_block block[34]; //maximum we get 34 keywords after split & merge & filter.
 	int num=0;   
 	void load_QueryInternal(string & s,int & n);
 	void insert_QueryInternal(string s,int pos,int & n);
-	void remove_QueryInternal(string s, int &n);
+	void remove_QueryInternal(int pos,int &n);
 	int find_QueryInternal(string s, int n);
+	void process_QueryInternal(string s,int & n);
 	bool word_exist(string s, int n, keyword_block * block);
+	// Function test
+	void PrintToTest();
 };
 //
 void ToLower(string & s);
