@@ -243,9 +243,9 @@ bool query::word_exist(string s)
 {
 	return word_exist(s, num, block);
 }
-void query::load_Query(string & s)
+void query::load_Query(string & s,wordTrie  root)
 {
-	load_QueryInternal(s, num);
+	load_QueryInternal(s,root,num);
 }
 void query::insert_Query(string s, int pos)
 {
@@ -259,8 +259,16 @@ void query::remove_Query(int pos)
 {
 	remove_QueryInternal(pos, num);
 }
+void query::Linearsearch(int pos)
+{
+	LinearseachInternal(pos, num);
+}
+void query::process_Query(query q,string s, wordTrie  root, StopWordChaining * stopword)
+{
+	process_QueryInternal(q,s,root,stopword,num);
+}
 
-void query::load_QueryInternal(string & s,int & n)
+void query::load_QueryInternal(string & s,wordTrie root,int & n)
 {
 	string temp;
 	for (int i = 0; i < s.length() + 1; i++)
@@ -268,6 +276,8 @@ void query::load_QueryInternal(string & s,int & n)
 		if (s[i] == ' ' || i == s.length())
 		{
 			block[n].s = temp;
+			wordNode * temp1= root.Findword(block[n].s);
+			if(temp1!=NULL)block[n].wordinfo = temp1->phead;
 			n++;
 			temp.clear();
 		}
@@ -308,7 +318,66 @@ bool query::word_exist(string s, int n, keyword_block * block)
 		if (block[i].s == s)return true;
 	return false;
 }
-
+void query::LinearseachInternal(int pos, int & n)
+{
+	string s = block[pos].s;
+	// Chưa xong,đang suy nghĩ khi nào xài 
+}
+void query::process_QueryInternal(query q,string s, wordTrie  root, StopWordChaining * stopword,int &n)
+{	
+	load_Query(s,root);
+	for (int i = 0; i < n; i++)
+	{
+		if (stopword->isStopWord(block[i].s))
+		{
+			q.remove_Query(i);
+			break;
+		}
+		if (block[i].rank.isAnd(block[i].s)||block[i].s[0]=='+')
+		{
+			q.remove_Query(i);
+			if(i>1)block[i-1].rank.is_And = true;
+			block[i + 1].rank.is_And = true;
+		}
+		if (block[i].rank.isOr(block[i].s))
+		{
+			q.remove_Query(i);
+			if (i > 1)block[i - 1].rank.is_Or = true;
+			block[i + 1].rank.is_Or = true;
+		}
+		if (block[i].rank.isMinus(block[i].s))
+		{
+			q.remove_Query(i);
+			block[i + 1].rank.is_Minus;
+		}
+		if (block[i].rank.isIntitle(block[i].s))
+		{
+			block[i].rank.is_Intitle =true;
+		}
+		if (block[i].rank.isFile(block[i].s))
+		{
+			block[i].rank.is_File;
+		}
+		if (block[i].rank.isPrice(block[i].s))
+		{
+			block[i].rank.is_Price = true;
+		}
+		if (block[i].rank.isHashtags(block[i].s))
+		{
+			block[i].rank.is_Hashtags;
+		}
+		if (block[i].rank.isInRange(block[i].s))
+		{
+			block[i].rank.is_InRange = true;
+		}
+		if (block[i].rank.isWildCard(block[i].s))
+		{
+			block[i].rank.is_WildCard = true;
+			for (int j = 0; j < n; j++)
+				block[i].rank.is_WildCard = true;
+		}
+	}
+}
 void query:: PrintToTest()
 {
 	for (int i = 0; i < num; i++)
