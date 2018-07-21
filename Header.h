@@ -12,50 +12,40 @@ using namespace std;
 
 //Loading
 struct pathNode {//contain data of a single word
-	//inverted index using Linked List
 	string path;
-	pathNode* pnext;    
+	pathNode* pnext;
+	int pos[50];
 	int occurance;
 	pathNode() { occurance = 0; }
 };
 struct wordNode {//one node in the wordtrie
-	pathNode*phead = NULL;  //pathHead;
-	int n = 0;    //number of file
-	wordNode*children[26] = {};
-	wordNode()
-	{
-		n = 0;
-	}
+	pathNode*phead = NULL;
+	int n;
+	wordNode*children[38] = {};
+	wordNode() { n = 0; }
+
+
 };
 struct wordTrie {
 private:
-	wordNode*root;
+	wordNode * root;
 	void printInternal(wordNode*root, string word);//test print
 	string takeWord(ifstream &fin, int &n);
-	bool search(string s, wordNode * root);
-	wordNode* Findword(string s, wordNode * root);
 	void saveInternal(ofstream &fout, wordNode*root, string word);
-public:
-	wordTrie() {
-		root = NULL;
-	}
+	wordNode* Findword(string s, wordNode * root);
 
+public:
 	void print();//test print
+	wordTrie() { root = NULL; }
 	void loadwordFile(string path);//load trie from wordfile
 	void add(string path);//add a file to wordttrie
 	void savewordFile();//save trie to word file
-
-	bool search(string s)
-	{
-		return search(s, root);
-	}
+	bool search(string s, wordNode *root);
 	wordNode* Findword(string s);
 };
-//For searching
-//User will input a string -> we merge and split them into few blocks.
-
-//Stopword
-// Stopwords for feature 
+bool checkValidation(char x);//check if a valid char or not
+							 //Stopword
+							 // Stopwords for feature 
 struct Node
 {
 	string s;
@@ -85,7 +75,7 @@ private:
 	LinkedList arr[420];
 
 public:
-	void RuncreateChaining();
+	StopWordChaining();
 	bool isStopWord(string s);
 	int HashWord(string s);
 };
@@ -141,7 +131,7 @@ public:
 	bool word_exist(string s);
 	void Linearsearch(wordTrie root,int pos);
 	void Exactsearch(string s);
-	void process_Query(query q,string s,wordTrie  root, StopWordChaining * stopword);
+	void process_Query(query q,string s,wordTrie  root, StopWordChaining  stopword);
 	// Function test
 	void ShowPrint();
 private:
@@ -151,7 +141,7 @@ private:
 	void insert_QueryInternal(string s,int pos,int & n);
 	void remove_QueryInternal(int pos,int &n);
 	int  find_QueryInternal(string s, int n);
-	void process_QueryInternal(query q,string s, wordTrie  root, StopWordChaining * stopword,int & n);
+	void process_QueryInternal(query q,string s, wordTrie  root, StopWordChaining stopword,int & n);
 	void LinearseachInternal(wordTrie root,int pos, int &n);
 	bool word_exist(string s, int n, keyword_block * block);
 	// Function test
