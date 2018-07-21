@@ -8,7 +8,6 @@ int main()
 	query q;
 	StopWordChaining stopword;
 	wordTrie fuck;
-	stopword.RuncreateChaining();    // Load wordFile
 	string path = "data\\";
 	for (auto & p : std::experimental::filesystem::directory_iterator(path)) {
 		string p2 = p.path().string();
@@ -22,10 +21,10 @@ int main()
 	{
 		cout << "Enter:";
 		getline(cin, query);
-		q.load_Query(query);
+		q.process_Query(q, query, fuck, stopword);
 		//if (stopword.isStopWord(query)) cout << "good!";
 		//else cout << "fail!";
-		cout << "Position to add:";
+		/*cout << "Position to add:";
 		string s1;
 		int n;
 		cin >> n;
@@ -38,7 +37,7 @@ int main()
 		cout << "String to remove:";
 		string s;
 		getline(cin, s,'\n');
-		q.remove_Query(s);
+		q.remove_Query(s);*/
 		q.ShowPrint();
 		cout << endl;
 	}
