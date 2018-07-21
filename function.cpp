@@ -254,15 +254,15 @@ void query::insert_Query(string s, int pos)
 int query::find_Query(string s)
 {
 	return find_QueryInternal(s, num);
-}
+}														 
 void query::remove_Query(int pos)
 {
 	remove_QueryInternal(pos, num);
 }
-void query::Linearsearch(int pos)
+void query::Linearsearch(wordTrie root,int pos)
 {
-	LinearseachInternal(pos, num);
-}
+	LinearseachInternal(root,pos, num);
+}										 
 void query::process_Query(query q,string s, wordTrie  root, StopWordChaining * stopword)
 {
 	process_QueryInternal(q,s,root,stopword,num);
@@ -318,10 +318,25 @@ bool query::word_exist(string s, int n, keyword_block * block)
 		if (block[i].s == s)return true;
 	return false;
 }
-void query::LinearseachInternal(int pos, int & n)
+void query::LinearseachInternal(wordTrie root,int pos, int & n)
 {
+	pathNode* path_node;
+	string temp;
 	string s = block[pos].s;
+	path_node = root.Findword(temp)->phead;
+	block[pos].wordinfo = path_node;
 	// Chưa xong,đang suy nghĩ khi nào xài 
+	for (int i = 0; i < block[pos].s.length()+1; i++)
+	{
+		path_node = root.Findword(temp)->phead;
+		if (path_node != NULL)
+		{
+			insert_Query(temp, pos + 1);
+			block[pos+1].wordinfo = path_node;
+		}
+		else 
+			temp+=s[i];
+	}
 }
 void query::process_QueryInternal(query q,string s, wordTrie  root, StopWordChaining * stopword,int &n)
 {	
@@ -446,7 +461,6 @@ bool StopWordChaining::isStopWord(string s)
 
 	return false;
 }
-
 Node* LinkedList::FindWord(string s, Node*cur)
 {
 	if (cur == NULL) return NULL;
@@ -456,14 +470,12 @@ Node* LinkedList::FindWord(string s, Node*cur)
 	}
 	else return FindWord(s, cur->next);
 }
-
 Node* LinkedList::RunFindWord(string s)
 {
 	ToLower(s);
 	return FindWord(s, head);
 
 }
-
 bool StringCompare(string s1, string s2)
 {
 
@@ -485,7 +497,6 @@ void ToLower(string & s)
 	for (int i = 0; i < s.length(); i++) tolower(s[i]);
 	return;
 }
-
 
 // Feature 1
 bool RankingSystem::isAnd(string s)
