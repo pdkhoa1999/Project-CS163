@@ -325,10 +325,26 @@ wordNode* wordTrie::Findword(string s, wordNode * root)
 	char x;
 	//function filter 
 	while (checkValidation(s[i]) && i<s.length())
-	{
+	{ //26 -> 35
+		// 36:# 37 $ 38
 		if (cur == NULL)return NULL;
-		x = tolower(s[i]);
-		cur = cur->children[s[i] - 'a'];
+		if ((s[i] >= 'A'&& s[i] <= 90) || s[i] >= 'a' && s[i] <= 'z')
+		{
+			x = tolower(s[i]);
+			cur = cur->children[s[i] - 'a'];
+		}
+		else if(s[i]>='0' && s[i]<='9')
+		{
+			cur = cur->children[s[i] - 22];
+		}
+		else if (s[i] == '#')
+		{
+			cur = cur->children[36];
+		}
+		else if (s[i] == '$')
+		{
+			cur = cur->children[37];
+		}
 		i++;
 		if (cur != NULL && i == s.length() && cur->phead != NULL)return cur;
 	}
@@ -434,17 +450,17 @@ void query::load_Query(string & s,wordTrie  root)
 {
 	load_QueryInternal(s,root,num);
 }
-void query::insert_Query(string s, int pos)
+void query::insert_Query(string s, int pos,wordTrie root)
 {
-	insert_QueryInternal(s,pos,num);
+	insert_QueryInternal(s,pos,root,num);
 }
 int query::find_Query(string s)
 {
 	return find_QueryInternal(s, num);
 }														 
-void query::remove_Query(int pos)
+void query::remove_Query(int pos,int &n)
 {
-	remove_QueryInternal(pos, num);
+	remove_QueryInternal(pos, n);
 }
 void query::Linearsearch(wordTrie root,int pos)
 {
@@ -453,6 +469,10 @@ void query::Linearsearch(wordTrie root,int pos)
 void query::process_Query(query q,string s, wordTrie  root, StopWordChaining stopword)
 {
 	process_QueryInternal(q,s,root,stopword,num);
+}
+void query::clear_Query()
+{
+	clear_QueryInternal(num);
 }
 
 void query::load_QueryInternal(string & s,wordTrie root,int & n)
@@ -464,7 +484,7 @@ void query::load_QueryInternal(string & s,wordTrie root,int & n)
 		{
 			block[n].s = temp;
 			wordNode * temp1= root.Findword(block[n].s);
-			if(temp1!=NULL)block[n].wordinfo = temp1->phead;
+			if (temp1 != NULL)block[n].wordinfo = temp1->phead; //else remove_Query(n);
 			n++;
 			temp.clear();
 		}
@@ -472,7 +492,13 @@ void query::load_QueryInternal(string & s,wordTrie root,int & n)
 			temp += s[i];
 	}
 }
-void query::insert_QueryInternal(string s,int pos,int & n)
+void query::clear_QueryInternal(int & n)
+{
+	for (int i = 0; i < n; i++)
+		block[i].s = "";
+	n = 0;
+}
+void query::insert_QueryInternal(string s,int pos,wordTrie root,int & n)
 {
 	n++;
 	int temp;
@@ -480,6 +506,8 @@ void query::insert_QueryInternal(string s,int pos,int & n)
 	{
 		block[i].s = block[i - 1].s;
 	}
+	wordNode * temp1 = root.Findword(block[n].s);
+	if (temp1 != NULL)block[n].wordinfo = temp1->phead;
 	block[pos].s = s;
 }
 int query::find_QueryInternal(string s, int n)
@@ -512,13 +540,13 @@ void query::LinearseachInternal(wordTrie root,int pos, int & n)
 	string s = block[pos].s;
 	path_node = root.Findword(temp)->phead;
 	block[pos].wordinfo = path_node;
-	// Chưa xong,đang suy nghĩ khi nào xài 
+
 	for (int i = 0; i < block[pos].s.length()+1; i++)
 	{
 		path_node = root.Findword(temp)->phead;
 		if (path_node != NULL)
 		{
-			insert_Query(temp, pos + 1);
+			insert_Query(temp, pos + 1,root);
 			block[pos+1].wordinfo = path_node;
 		}
 		else 
@@ -532,32 +560,76 @@ void query::process_QueryInternal(query q,string s, wordTrie  root, StopWordChai
 	{
 		if (stopword.isStopWord(block[i].s))
 		{
-			q.remove_Query(i);
-			break;
+			q.remove_Query(i,n);
+			continue;
 		}
-		if (block[i].rank.isAnd(block[i].s)||block[i].s[0]=='+')
+		if (block[i].rank.isInRange(block[i].s))
 		{
-			q.remove_Query(i);
-			if(i>1)block[i-1].rank.is_And = true;
+			string temp;
+			int j = 0;
+			block[i].rank.is_InRange = true;
+			for (j; j < block[i].s.length() + 1; j++)
+			{
+				if (block[i].s[j] == '.') {
+					insert_Query(temp, i + 1, root);
+					temp.clear();
+					break;
+				}
+				else
+					temp += block[i].s[j];
+			}
+			for (j; j < block[i].s.length(); j++)
+			{
+				if (block[i].s[j] == '.')continue;
+				else temp += block[i].s[j];
+			}
+			remove_Query(i,n);
+			insert_Query(temp, i, root);
+		}
+		if (block[i].rank.isAnd(block[i].s))
+		{
+			if (i > 1)block[i - 1].rank.is_And = true;
 			block[i + 1].rank.is_And = true;
+			q.remove_Query(i,n);
+			i--;
+		}
+		if (block[i].s[0] == '+')
+		{
+			block[i].s.erase(s.begin(), s.begin() + 1);
+			string temp = block[i].s;
+			remove_Query(i,n);
+			insert_Query(temp, i, root);
+			block[i].rank.is_And;
 		}
 		if (block[i].rank.isOr(block[i].s))
 		{
-			q.remove_Query(i);
 			if (i > 1)block[i - 1].rank.is_Or = true;
 			block[i + 1].rank.is_Or = true;
+			q.remove_Query(i,n);
+			i--;
 		}
 		if (block[i].rank.isMinus(block[i].s))
 		{
-			q.remove_Query(i);
-			block[i + 1].rank.is_Minus;
+			block[i].s.erase(block[i].s.begin(), block[i].s.begin() + 1);
+			string temp = block[i].s;
+			remove_Query(i,n);
+			insert_Query(temp, i, root);
+			block[i].rank.is_Minus;
 		}
 		if (block[i].rank.isIntitle(block[i].s))
 		{
-			block[i].rank.is_Intitle =true;
+			block[i].s.erase(block[i].s.begin(), block[i].s.begin() + 7);
+			string temp = block[i].s;
+			remove_Query(i,n);
+			insert_Query(temp, i, root);
+			block[i].rank.is_Intitle = true;
 		}
 		if (block[i].rank.isFile(block[i].s))
 		{
+			block[i].s.erase(s.begin(), s.begin() + 8);
+			string temp = block[i].s;
+			remove_Query(i,n);
+			insert_Query(temp, i, root);
 			block[i].rank.is_File;
 		}
 		if (block[i].rank.isPrice(block[i].s))
@@ -568,25 +640,32 @@ void query::process_QueryInternal(query q,string s, wordTrie  root, StopWordChai
 		{
 			block[i].rank.is_Hashtags;
 		}
-		if (block[i].rank.isInRange(block[i].s))
-		{
-			block[i].rank.is_InRange = true;
-		}
 		if (block[i].rank.isWildCard(block[i].s))
 		{
 			block[i].rank.is_WildCard = true;
 			for (int j = 0; j < n; j++)
 				block[i].rank.is_WildCard = true;
 		}
+		if (i >= 0) {
+			wordNode * temp1;
+			temp1 = root.Findword(block[i].s);
+			if (temp1 == NULL) {
+				remove_Query(i,n);
+				i--;
+			}
+			else block[i].wordinfo = temp1->phead;
+		}
 	}
 }
 void query:: PrintToTest()
 {
-	for (int i = 0; i < num; i++)
-	{
-		cout << block[i].s << " ";
+	if (num == 0)cout << "Not Found !!!" << endl;
+	else {
+		for (int i = 0; i < num; i++)
+		{
+			cout << block[i].s << " " << block[i].wordinfo->path << " " << block[i].wordinfo->occurance << endl;
+		}
 	}
-
 	return;
 }
 void query::ShowPrint()
