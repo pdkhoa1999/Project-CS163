@@ -21,7 +21,7 @@ int main()
 	{
 		cout << "Enter:";
 		getline(cin, query);
-		q.process_Query(q, query, fuck, stopword);
+		q.process_Query(q, query, fuck, stopword);  
 		//if (stopword.isStopWord(query)) cout << "good!";
 		//else cout << "fail!";
 		/*cout << "Position to add:";
@@ -39,6 +39,7 @@ int main()
 		getline(cin, s,'\n');
 		q.remove_Query(s);*/
 		q.ShowPrint();
+		q.clear_Query();
 		cout << endl;
 	}
 
