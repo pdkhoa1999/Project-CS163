@@ -4,6 +4,7 @@
 #include<iostream>
 #include<fstream>
 #include<string>
+#include <string.h>
 #include <Windows.h>
 #include <time.h>
 #include <filesystem>
@@ -83,17 +84,16 @@ public:
 class RankingSystem
 {
 public:
-	bool is_Merge;
-	bool is_And;// Feature 1
-	bool is_Or;//Feature 2
-	bool is_Minus;// Feature 3
-	bool is_Intitle;// Feature 4
-	bool is_File;//Feature 6
-	bool is_Price;//Feature 7
-	bool is_Hashtags; //Feature 8	
-	bool is_Match; // Feature 9(uncompleted!!)
-	bool is_WildCard; // Feature 10
-	bool is_InRange; // Feature 11
+	bool is_And=false;// Feature 1
+	bool is_Or=false;//Feature 2
+	bool is_Minus=false;// Feature 3
+	bool is_Intitle = false;// Feature 4
+	bool is_File=false;//Feature 6
+	bool is_Price=false;//Feature 7
+	bool is_Hashtags=false; //Feature 8	
+	bool is_Match=false; // Feature 9(uncompleted!!)
+	bool is_WildCard=false; // Feature 10
+	bool is_InRange=false; // Feature 11
 ///////////// Function
 	bool isAnd(string s);// Feature 1
 	bool isOr(string s);//Feature 2
@@ -125,22 +125,24 @@ public:
 		num = 0;
 	}
 	void load_Query(string & s,wordTrie  root);
-	void insert_Query(string s,int pos);
-	void remove_Query(int pos);
+	void insert_Query(string s,int pos,wordTrie root);
+	void remove_Query(int pos,int &n);
 	int  find_Query(string s); // return block position 
 	bool word_exist(string s);
 	void Linearsearch(wordTrie root,int pos);
 	void Exactsearch(string s);
 	void process_Query(query q,string s,wordTrie  root, StopWordChaining  stopword);
+	void clear_Query();
 	// Function test
 	void ShowPrint();
 private:
 	keyword_block block[34];
 	int  num=0;  
 	void load_QueryInternal(string & s,wordTrie root,int & n);
-	void insert_QueryInternal(string s,int pos,int & n);
+	void insert_QueryInternal(string s,int pos,wordTrie root,int & n);
 	void remove_QueryInternal(int pos,int &n);
 	int  find_QueryInternal(string s, int n);
+	void clear_QueryInternal(int & n);
 	void process_QueryInternal(query q,string s, wordTrie  root, StopWordChaining stopword,int & n);
 	void LinearseachInternal(wordTrie root,int pos, int &n);
 	bool word_exist(string s, int n, keyword_block * block);
