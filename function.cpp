@@ -122,6 +122,7 @@ string wordTrie::takeWord(ifstream &fin, int &n)
 			n = i;
 		}
 	}
+	ToLower(word);
 	return word;
 }
 void wordTrie::printInternal(wordNode*root, string word)
@@ -322,7 +323,6 @@ wordNode* wordTrie::Findword(string s, wordNode * root)
 {
 	int i = 0;
 	wordNode * cur = root;
-	char x;
 	//function filter 
 	while (checkValidation(s[i]) && i<s.length())
 	{ //26 -> 35
@@ -330,7 +330,7 @@ wordNode* wordTrie::Findword(string s, wordNode * root)
 		if (cur == NULL)return NULL;
 		if ((s[i] >= 'A'&& s[i] <= 90) || s[i] >= 'a' && s[i] <= 'z')
 		{
-			x = tolower(s[i]);
+			s[i] = tolower(s[i]);
 			cur = cur->children[s[i] - 'a'];
 		}
 		else if(s[i]>='0' && s[i]<='9')
@@ -437,7 +437,7 @@ bool StringCompare(string s1, string s2)
 }
 void ToLower(string & s)
 {
-	for (int i = 0; i < s.length(); i++) tolower(s[i]);
+	for (int i = 0; i < s.length(); i++) s[i]=tolower(s[i]);
 	return;
 }
 
@@ -460,11 +460,11 @@ int query::find_Query(string s)
 }														 
 void query::remove_Query(int pos,int &n)
 {
-	remove_QueryInternal(pos, n);
+	remove_QueryInternal(pos,n);
 }
-void query::Linearsearch(wordTrie root,int pos)
+void query::Linearsearch(wordTrie root,int pos,int & n)
 {
-	LinearseachInternal(root,pos, num);
+	LinearseachInternal(root,pos, n);
 }										 
 void query::process_Query(query q,string s, wordTrie  root, StopWordChaining stopword)
 {
@@ -521,9 +521,10 @@ int query::find_QueryInternal(string s, int n)
 }
 void query::remove_QueryInternal(int pos, int &n)
 {
-	for (int i = pos; i < n; i++)
+	for (int i = pos; i < n; ++i)
 	{
 		block[i].s = block[i + 1].s;
+		block[i].wordinfo = block[i + 1].wordinfo;
 	}
 	n--;
 }
@@ -535,36 +536,46 @@ bool query::word_exist(string s, int n, keyword_block * block)
 }
 void query::LinearseachInternal(wordTrie root,int pos, int & n)
 {
-	pathNode* path_node;
-	string temp;
+	wordNode* path_node;
+	string temp,prev;
 	string s = block[pos].s;
-	path_node = root.Findword(temp)->phead;
-	block[pos].wordinfo = path_node;
-
+	path_node = root.Findword(temp);
+	if(path_node!=NULL)block[pos].wordinfo = path_node->phead;
+	if (s == " ")return;
 	for (int i = 0; i < block[pos].s.length()+1; i++)
 	{
-		path_node = root.Findword(temp)->phead;
+		path_node = root.Findword(prev + temp);
+		if (path_node != NULL && prev != "")
+		{
+			insert_Query(prev+temp, pos + 1, root);
+			block[pos + 1].wordinfo = path_node->phead;
+		}
+		path_node = root.Findword(temp);
 		if (path_node != NULL)
 		{
 			insert_Query(temp, pos + 1,root);
-			block[pos+1].wordinfo = path_node;
+			block[pos+1].wordinfo = path_node->phead;
+			prev += temp;
+			temp.clear();
 		}
-		else 
 			temp+=s[i];
 	}
 }
 void query::process_QueryInternal(query q,string s, wordTrie  root, StopWordChaining stopword,int &n)
 {	
+	bool isFeature=false;
 	load_Query(s,root);
 	for (int i = 0; i < n; i++)
 	{
+		isFeature = false;
 		if (stopword.isStopWord(block[i].s))
 		{
-			q.remove_Query(i,n);
+			remove_Query(i,n);
 			continue;
 		}
 		if (block[i].rank.isInRange(block[i].s))
 		{
+			isFeature = true;
 			string temp;
 			int j = 0;
 			block[i].rank.is_InRange = true;
@@ -588,13 +599,15 @@ void query::process_QueryInternal(query q,string s, wordTrie  root, StopWordChai
 		}
 		if (block[i].rank.isAnd(block[i].s))
 		{
+			isFeature = true;
 			if (i > 1)block[i - 1].rank.is_And = true;
 			block[i + 1].rank.is_And = true;
-			q.remove_Query(i,n);
+			remove_Query(i,n);
 			i--;
 		}
 		if (block[i].s[0] == '+')
 		{
+			isFeature = true;
 			block[i].s.erase(s.begin(), s.begin() + 1);
 			string temp = block[i].s;
 			remove_Query(i,n);
@@ -603,13 +616,15 @@ void query::process_QueryInternal(query q,string s, wordTrie  root, StopWordChai
 		}
 		if (block[i].rank.isOr(block[i].s))
 		{
+			isFeature = true;
 			if (i > 1)block[i - 1].rank.is_Or = true;
 			block[i + 1].rank.is_Or = true;
-			q.remove_Query(i,n);
+			remove_Query(i,n);
 			i--;
 		}
 		if (block[i].rank.isMinus(block[i].s))
 		{
+			isFeature = true;
 			block[i].s.erase(block[i].s.begin(), block[i].s.begin() + 1);
 			string temp = block[i].s;
 			remove_Query(i,n);
@@ -618,6 +633,7 @@ void query::process_QueryInternal(query q,string s, wordTrie  root, StopWordChai
 		}
 		if (block[i].rank.isIntitle(block[i].s))
 		{
+			isFeature = true;
 			block[i].s.erase(block[i].s.begin(), block[i].s.begin() + 7);
 			string temp = block[i].s;
 			remove_Query(i,n);
@@ -626,6 +642,7 @@ void query::process_QueryInternal(query q,string s, wordTrie  root, StopWordChai
 		}
 		if (block[i].rank.isFile(block[i].s))
 		{
+			isFeature = true;
 			block[i].s.erase(s.begin(), s.begin() + 8);
 			string temp = block[i].s;
 			remove_Query(i,n);
@@ -634,27 +651,36 @@ void query::process_QueryInternal(query q,string s, wordTrie  root, StopWordChai
 		}
 		if (block[i].rank.isPrice(block[i].s))
 		{
+			isFeature = true;
 			block[i].rank.is_Price = true;
 		}
 		if (block[i].rank.isHashtags(block[i].s))
 		{
+			isFeature = true;
 			block[i].rank.is_Hashtags;
 		}
 		if (block[i].rank.isWildCard(block[i].s))
 		{
+			isFeature = true;
 			block[i].rank.is_WildCard = true;
 			for (int j = 0; j < n; j++)
 				block[i].rank.is_WildCard = true;
 		}
+		/*if (!isFeature)
+		{
+			Linearsearch(root, i, n);
+		}*/
 		if (i >= 0) {
 			wordNode * temp1;
 			temp1 = root.Findword(block[i].s);
+
 			if (temp1 == NULL) {
 				remove_Query(i,n);
 				i--;
 			}
 			else block[i].wordinfo = temp1->phead;
 		}
+		
 	}
 }
 void query:: PrintToTest()
@@ -663,7 +689,12 @@ void query:: PrintToTest()
 	else {
 		for (int i = 0; i < num; i++)
 		{
-			cout << block[i].s << " " << block[i].wordinfo->path << " " << block[i].wordinfo->occurance << endl;
+			cout << block[i].s << endl;
+			while (block[i].wordinfo != NULL)
+			{
+				cout << block[i].wordinfo->path << " " << block[i].wordinfo->occurance << endl;
+				block[i].wordinfo=block[i].wordinfo->pnext;
+			}
 		}
 	}
 	return;
