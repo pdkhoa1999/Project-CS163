@@ -630,7 +630,7 @@ void query::process_QueryInternal(string s, wordTrie  root, StopWordChaining sto
 			string temp = block[i].s;
 			remove_Query(i,n);
 			insert_Query(temp, i, root);
-			block[i].rank.is_Minus;
+			block[i].rank.is_Minus=true;
 		}
 		if (block[i].rank.isIntitle(block[i].s))
 		{
@@ -648,7 +648,7 @@ void query::process_QueryInternal(string s, wordTrie  root, StopWordChaining sto
 			string temp = block[i].s;
 			remove_Query(i,n);
 			insert_Query(temp, i, root);
-			block[i].rank.is_File;
+			block[i].rank.is_File=true;
 		}
 		if (block[i].rank.isPrice(block[i].s))
 		{
