@@ -474,7 +474,130 @@ void query::clear_Query()
 {
 	clear_QueryInternal(num);
 }
+void query::inrange_Feature(int i,wordTrie root, int & n)
+{
+	inrange_FeatureInternal(i,root, n);
+}
+void query::plus_Feature(int i, wordTrie root, int n)
+{
+	plus_FeatureInternal(i, root, n);
+}
+void query::and_Feature(int i, int n)
+{
+	and_FeatureInternal(i, n);
+}
+void query::or_Feature(int i, int n)
+{
+	or_FeatureInternal(i, n);
+}
+void query::minus_Feature(int i, wordTrie root, int n)
+{
+	minus_FeatureInternal(i, root, n);
+}
+void query::intitle_Feature(int i, wordTrie root, int n)
+{
+	intitle_FeatureInternal(i, root, n);
+}
+void query::file_Feature(int i, wordTrie root, int n)
+{
+	file_FeatureInternal(i, root, n);
+}
+void query::wildcard_Feature(int i,int n)
+{
+	wildcard_FeatureInternal(i,n);
+}
+void query::upduate_Address(int &i, wordTrie root, int &n)
+{
+	upduate_AddressInternal(i, root, n);
+}
 
+void query::upduate_AddressInternal(int &i, wordTrie root, int &n)
+{
+	if (i >= 0) {
+		wordNode * temp1;
+		temp1 = root.Findword(block[i].s);
+
+		if (temp1 == NULL) {
+			remove_Query(i, n);
+			i--;
+		}
+		else block[i].wordinfo = temp1->phead;
+	}
+}
+void query::wildcard_FeatureInternal(int i,int n)
+{
+	block[i].rank.is_WildCard = true;
+	for (int j = 0; j < n; j++)
+		block[i].rank.is_WildCard = true;
+}
+void query::file_FeatureInternal(int i, wordTrie root, int n)
+{
+	block[i].s.erase(0, 8);
+	string temp = block[i].s;
+	remove_Query(i, n);
+	insert_Query(temp, i, root);
+	block[i].rank.is_File = true;
+	cout << "Filetype Feature " << endl;
+}
+void query::intitle_FeatureInternal(int i, wordTrie root, int n)
+{
+	block[i].s.erase(0, 8);
+	string temp = block[i].s;
+	remove_Query(i, n);
+	insert_Query(temp, i, root);
+	block[i].rank.is_Intitle = true;
+}
+void query::minus_FeatureInternal(int i, wordTrie root, int n)
+{
+	block[i].s.erase(block[i].s.begin(), block[i].s.begin() + 1);
+	string temp = block[i].s;
+	remove_Query(i, n);
+	insert_Query(temp, i, root);
+	block[i].rank.is_Minus = true;
+}
+void query::or_FeatureInternal(int i, int n)
+{
+	if (i > 1)block[i - 1].rank.is_Or = true;
+	block[i + 1].rank.is_Or = true;
+	remove_Query(i, n);
+}
+void query::and_FeatureInternal(int i, int n)
+{
+	if (i > 1)block[i - 1].rank.is_And = true;
+	block[i + 1].rank.is_And = true;
+	remove_Query(i, n);
+}
+void query::plus_FeatureInternal(int i, wordTrie root, int n)
+{
+	block[i].s.erase(0, 1);
+	string temp = block[i].s;
+	remove_Query(i, n);
+	insert_Query(temp, i, root);
+	block[i].rank.is_And = true;
+}
+void query::inrange_FeatureInternal(int i,wordTrie root, int & n)
+{
+	string temp;
+	int j = 0;
+	block[i].rank.is_InRange = true;
+	for (j; j < block[i].s.length() + 1; j++)
+	{
+		if (block[i].s[j] == '.') {
+			insert_Query(temp, i + 1, root);
+			temp.clear();
+			break;
+		}
+		else
+			temp += block[i].s[j];
+	}
+	for (j; j < block[i].s.length(); j++)
+	{
+		if (block[i].s[j] == '.')continue;
+		else temp += block[i].s[j];
+	}
+	remove_Query(i, n);
+	insert_Query(temp, i, root);
+}
 void query::load_QueryInternal(string & s,wordTrie root,int & n)
 {
 	string temp;
@@ -577,78 +700,40 @@ void query::process_QueryInternal(string s, wordTrie  root, StopWordChaining sto
 		if (block[i].rank.isInRange(block[i].s))
 		{
 			isFeature = true;
-			string temp;
-			int j = 0;
-			block[i].rank.is_InRange = true;
-			for (j; j < block[i].s.length() + 1; j++)
-			{
-				if (block[i].s[j] == '.') {
-					insert_Query(temp, i + 1, root);
-					temp.clear();
-					break;
-				}
-				else
-					temp += block[i].s[j];
-			}
-			for (j; j < block[i].s.length(); j++)
-			{
-				if (block[i].s[j] == '.')continue;
-				else temp += block[i].s[j];
-			}
-			remove_Query(i,n);
-			insert_Query(temp, i, root);
+			inrange_Feature(i, root, n);
 		}
 		if (block[i].rank.isAnd(block[i].s))
 		{
 			isFeature = true;
-			if (i > 1)block[i - 1].rank.is_And = true;
-			block[i + 1].rank.is_And = true;
-			remove_Query(i,n);
+			and_Feature(i, n);
 			i--;
 		}
 		if (block[i].s[0] == '+')
 		{
 			isFeature = true;
-			block[i].s.erase(s.begin(), s.begin() + 1);
-			string temp = block[i].s;
-			remove_Query(i,n);
-			insert_Query(temp, i, root);
-			block[i].rank.is_And;
+			plus_Feature(i, root, n);
 		}
 		if (block[i].rank.isOr(block[i].s))
 		{
 			isFeature = true;
-			if (i > 1)block[i - 1].rank.is_Or = true;
-			block[i + 1].rank.is_Or = true;
-			remove_Query(i,n);
+			or_Feature(i, n);
 			i--;
 		}
 		if (block[i].rank.isMinus(block[i].s))
 		{
 			isFeature = true;
-			block[i].s.erase(block[i].s.begin(), block[i].s.begin() + 1);
-			string temp = block[i].s;
-			remove_Query(i,n);
-			insert_Query(temp, i, root);
-			block[i].rank.is_Minus=true;
+			minus_Feature(i, root, n);
 		}
 		if (block[i].rank.isIntitle(block[i].s))
 		{
 			isFeature = true;
-			block[i].s.erase(block[i].s.begin(), block[i].s.begin() + 7);
-			string temp = block[i].s;
-			remove_Query(i,n);
-			insert_Query(temp, i, root);
-			block[i].rank.is_Intitle = true;
+			intitle_Feature(i, root, n);
 		}
 		if (block[i].rank.isFile(block[i].s))
 		{
 			isFeature = true;
-			block[i].s.erase(s.begin(), s.begin() + 8);
-			string temp = block[i].s;
-			remove_Query(i,n);
-			insert_Query(temp, i, root);
-			block[i].rank.is_File=true;
+			file_Feature(i, root, n);
+			continue;
 		}
 		if (block[i].rank.isPrice(block[i].s))
 		{
@@ -663,24 +748,14 @@ void query::process_QueryInternal(string s, wordTrie  root, StopWordChaining sto
 		if (block[i].rank.isWildCard(block[i].s))
 		{
 			isFeature = true;
-			block[i].rank.is_WildCard = true;
-			for (int j = 0; j < n; j++)
-				block[i].rank.is_WildCard = true;
+			wildcard_Feature(i, n);
 		}
 		/*if (!isFeature)
 		{
 			Linearsearch(root, i, n);
 		}*/
-		if (i >= 0) {
-			wordNode * temp1;
-			temp1 = root.Findword(block[i].s);
 
-			if (temp1 == NULL) {
-				remove_Query(i,n);
-				i--;
-			}
-			else block[i].wordinfo = temp1->phead;
-		}
+		upduate_Address(i, root, n);
 	}
 }
 void query:: PrintToTest()
@@ -709,7 +784,7 @@ void query::ShowPrint()
 // Feature 1
 bool RankingSystem::isAnd(string s)
 {
-	if (StringCompare(s, "and") || s.find("+") != std::string::npos) return true;
+	if (StringCompare(s, "and") ) return true;
 	else return false;
 
 }
