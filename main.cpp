@@ -3,25 +3,26 @@
 
 int main()
 {
-
+	keyword_block *block;
 	clock_t start = clock();
 	query q;
 	StopWordChaining stopword;
 	wordTrie fuck;
-	string path = "data\\";
+	/*string path = "data\\";
 	for (auto & p : std::experimental::filesystem::directory_iterator(path)) {
 		string p2 = p.path().string();
 	//	cout << p2 << endl;
 		fuck.add(p2);
 	}
-	fuck.savewordFile();
+	fuck.savewordFile();*/
+	fuck.loadwordFile("word.txt");
 	string query;
 	cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << endl;
 	while (query != "0")
 	{
 		cout << "Enter:";
 		getline(cin, query);
-		q.process_Query(q, query, fuck, stopword);  
+		q.process_Query(query, fuck, stopword);  
 		//if (stopword.isStopWord(query)) cout << "good!";
 		//else cout << "fail!";
 		/*cout << "Position to add:";
