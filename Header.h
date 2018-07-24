@@ -129,21 +129,21 @@ public:
 	void remove_Query(int pos,int &n);
 	int  find_Query(string s); // return block position 
 	bool word_exist(string s);
-	void Linearsearch(wordTrie root,int pos);
+	void Linearsearch(wordTrie root,int pos,int & n);
 	void Exactsearch(string s);
-	void process_Query(query q,string s,wordTrie  root, StopWordChaining  stopword);
+	void process_Query(string s,wordTrie  root, StopWordChaining  stopword);
 	void clear_Query();
 	// Function test
 	void ShowPrint();
 private:
 	keyword_block block[34];
 	int  num=0;  
-	void load_QueryInternal(string & s,wordTrie root,int & n);
+	void load_QueryInternal(string & ,wordTrie root,int & n);
 	void insert_QueryInternal(string s,int pos,wordTrie root,int & n);
 	void remove_QueryInternal(int pos,int &n);
 	int  find_QueryInternal(string s, int n);
 	void clear_QueryInternal(int & n);
-	void process_QueryInternal(query q,string s, wordTrie  root, StopWordChaining stopword,int & n);
+	void process_QueryInternal(string s, wordTrie  root, StopWordChaining stopword,int & n);
 	void LinearseachInternal(wordTrie root,int pos, int &n);
 	bool word_exist(string s, int n, keyword_block * block);
 	// Function test
