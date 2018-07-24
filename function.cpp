@@ -466,9 +466,9 @@ void query::Linearsearch(wordTrie root,int pos,int & n)
 {
 	LinearseachInternal(root,pos, n);
 }										 
-void query::process_Query(query q,string s, wordTrie  root, StopWordChaining stopword)
+void query::process_Query(string s, wordTrie  root, StopWordChaining stopword)
 {
-	process_QueryInternal(q,s,root,stopword,num);
+	process_QueryInternal(s,root,stopword,num);
 }
 void query::clear_Query()
 {
@@ -561,7 +561,7 @@ void query::LinearseachInternal(wordTrie root,int pos, int & n)
 			temp+=s[i];
 	}
 }
-void query::process_QueryInternal(query q,string s, wordTrie  root, StopWordChaining stopword,int &n)
+void query::process_QueryInternal(string s, wordTrie  root, StopWordChaining stopword,int &n)
 {	
 	bool isFeature=false;
 	load_Query(s,root);
@@ -571,6 +571,7 @@ void query::process_QueryInternal(query q,string s, wordTrie  root, StopWordChai
 		if (stopword.isStopWord(block[i].s))
 		{
 			remove_Query(i,n);
+			i--;
 			continue;
 		}
 		if (block[i].rank.isInRange(block[i].s))
@@ -680,7 +681,6 @@ void query::process_QueryInternal(query q,string s, wordTrie  root, StopWordChai
 			}
 			else block[i].wordinfo = temp1->phead;
 		}
-		
 	}
 }
 void query:: PrintToTest()
