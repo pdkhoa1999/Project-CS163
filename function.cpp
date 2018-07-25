@@ -510,6 +510,28 @@ void query::upduate_Address(int &i, wordTrie root, int &n)
 {
 	upduate_AddressInternal(i, root, n);
 }
+void query::match_Feature(int i, wordTrie root, int n)
+{
+	match_FeatureInternal(i, root, n);
+}
+
+void query::match_FeatureInternal(int i, wordTrie root, int n)
+{
+	block[0].s.erase(0,1);
+	block[n - 1].s.erase(block[n - 1].s.length() - 1);
+	for (int i = 0; i < n; i++)
+	{
+		wordNode * temp1;
+		temp1 = root.Findword(block[i].s);
+		if (temp1 != NULL)
+			block[i].wordinfo = temp1->phead;
+		else
+			block[i].wordinfo = NULL;
+	}
+	cout << "Match Feature" << endl;
+	for (int i = 0; i < n; i++)
+		cout << block[i].s << endl;
+}
 
 void query::upduate_AddressInternal(int &i, wordTrie root, int &n)
 {
@@ -688,74 +710,85 @@ void query::process_QueryInternal(string s, wordTrie  root, StopWordChaining sto
 {	
 	bool isFeature=false;
 	load_Query(s,root);
-	for (int i = 0; i < n; i++)
+	if (block[0].rank.isMatch(block[0].s))
 	{
-		isFeature = false;
-		if (stopword.isStopWord(block[i].s))
+		match_Feature(0, root, n);
+	}
+	else {
+		for (int i = 0; i < n; i++)
 		{
-			remove_Query(i,n);
-			i--;
-			continue;
+			isFeature = false;
+			if (stopword.isStopWord(block[i].s))
+			{
+				remove_Query(i, n);
+				i--;
+				continue;
+			}
+			if (block[i].rank.isMatch(block[i].s))
+			{
+				block[i].s.erase(0);
+				for (int j = 0; j < n; j++)
+					block[j].rank.is_Match = true;
+			}
+			if (block[i].rank.isInRange(block[i].s))
+			{
+				isFeature = true;
+				inrange_Feature(i, root, n);
+			}
+			if (block[i].rank.isAnd(block[i].s))
+			{
+				isFeature = true;
+				and_Feature(i, n);
+				i--;
+			}
+			if (block[i].s[0] == '+')
+			{
+				isFeature = true;
+				plus_Feature(i, root, n);
+			}
+			if (block[i].rank.isOr(block[i].s))
+			{
+				isFeature = true;
+				or_Feature(i, n);
+				i--;
+			}
+			if (block[i].rank.isMinus(block[i].s))
+			{
+				isFeature = true;
+				minus_Feature(i, root, n);
+			}
+			if (block[i].rank.isIntitle(block[i].s))
+			{
+				isFeature = true;
+				intitle_Feature(i, root, n);
+			}
+			if (block[i].rank.isFile(block[i].s))
+			{
+				isFeature = true;
+				file_Feature(i, root, n);
+				continue;
+			}
+			if (block[i].rank.isPrice(block[i].s))
+			{
+				isFeature = true;
+				block[i].rank.is_Price = true;
+			}
+			if (block[i].rank.isHashtags(block[i].s))
+			{
+				isFeature = true;
+				block[i].rank.is_Hashtags;
+			}
+			if (block[i].rank.isWildCard(block[i].s))
+			{
+				isFeature = true;
+				wildcard_Feature(i, n);
+			}
+			/*if (!isFeature)
+			{
+				Linearsearch(root, i, n);
+			}*/
+			upduate_Address(i, root, n);
 		}
-		if (block[i].rank.isInRange(block[i].s))
-		{
-			isFeature = true;
-			inrange_Feature(i, root, n);
-		}
-		if (block[i].rank.isAnd(block[i].s))
-		{
-			isFeature = true;
-			and_Feature(i, n);
-			i--;
-		}
-		if (block[i].s[0] == '+')
-		{
-			isFeature = true;
-			plus_Feature(i, root, n);
-		}
-		if (block[i].rank.isOr(block[i].s))
-		{
-			isFeature = true;
-			or_Feature(i, n);
-			i--;
-		}
-		if (block[i].rank.isMinus(block[i].s))
-		{
-			isFeature = true;
-			minus_Feature(i, root, n);
-		}
-		if (block[i].rank.isIntitle(block[i].s))
-		{
-			isFeature = true;
-			intitle_Feature(i, root, n);
-		}
-		if (block[i].rank.isFile(block[i].s))
-		{
-			isFeature = true;
-			file_Feature(i, root, n);
-			continue;
-		}
-		if (block[i].rank.isPrice(block[i].s))
-		{
-			isFeature = true;
-			block[i].rank.is_Price = true;
-		}
-		if (block[i].rank.isHashtags(block[i].s))
-		{
-			isFeature = true;
-			block[i].rank.is_Hashtags;
-		}
-		if (block[i].rank.isWildCard(block[i].s))
-		{
-			isFeature = true;
-			wildcard_Feature(i, n);
-		}
-		/*if (!isFeature)
-		{
-			Linearsearch(root, i, n);
-		}*/
-
-		upduate_Address(i, root, n);
 	}
 }
 void query:: PrintToTest()
@@ -829,6 +862,7 @@ bool RankingSystem::isHashtags(string s)
 // Feature 9
 bool RankingSystem::isMatch(string s)
 {
+	if (s[0]=='"' || s[s.length()]=='"')return true;
 	return false;
 }
 // Feature 10
