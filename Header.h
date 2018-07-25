@@ -91,7 +91,7 @@ public:
 	bool is_File=false;//Feature 6
 	bool is_Price=false;//Feature 7
 	bool is_Hashtags=false; //Feature 8	
-	bool is_Match=false; // Feature 9(uncompleted!!)
+	bool is_Match=false; // Feature 9
 	bool is_WildCard=false; // Feature 10
 	bool is_InRange=false; // Feature 11
 ///////////// Function
@@ -102,7 +102,7 @@ public:
 	bool isFile(string s);//Feature 6
 	bool isPrice(string s);//Feature 7
 	bool isHashtags(string s); //Feature 8	
-	bool isMatch(string s); // Feature 9(uncompleted!!)
+	bool isMatch(string s); // Feature 9
 	bool isWildCard(string s); // Feature 10
 	bool isInRange(string s); // Feature 11
 	void isFeature(string s);
@@ -131,18 +131,38 @@ public:
 	bool word_exist(string s);
 	void Linearsearch(wordTrie root,int pos,int & n);
 	void Exactsearch(string s);
+	void inrange_Feature(int i,wordTrie root,int & n);
+	void plus_Feature(int i, wordTrie root, int n);
+	void and_Feature(int i, int n);
+	void or_Feature(int i, int n);
+	void minus_Feature(int i,wordTrie root, int n);
+	void intitle_Feature(int i, wordTrie root, int n);
+	void file_Feature(int i, wordTrie root, int n);
+	void wildcard_Feature(int i,int n);
+	void match_Feature(int i, wordTrie root, int n);
 	void process_Query(string s,wordTrie  root, StopWordChaining  stopword);
+	void upduate_Address(int &i, wordTrie root, int &n);
 	void clear_Query();
 	// Function test
 	void ShowPrint();
 private:
 	keyword_block block[34];
 	int  num=0;  
+	void upduate_AddressInternal(int &i, wordTrie root, int &n);
 	void load_QueryInternal(string & ,wordTrie root,int & n);
 	void insert_QueryInternal(string s,int pos,wordTrie root,int & n);
 	void remove_QueryInternal(int pos,int &n);
 	int  find_QueryInternal(string s, int n);
 	void clear_QueryInternal(int & n);
+	void inrange_FeatureInternal(int i,wordTrie root, int & n);
+	void and_FeatureInternal(int i, int n);
+	void wildcard_FeatureInternal(int i,int n);
+	void file_FeatureInternal(int i, wordTrie root, int n);
+	void intitle_FeatureInternal(int i, wordTrie root, int n);
+	void minus_FeatureInternal(int i, wordTrie root, int n);
+	void or_FeatureInternal(int i, int n);
+	void match_FeatureInternal(int i, wordTrie root, int n);
+	void plus_FeatureInternal(int i, wordTrie root, int n);
 	void process_QueryInternal(string s, wordTrie  root, StopWordChaining stopword,int & n);
 	void LinearseachInternal(wordTrie root,int pos, int &n);
 	bool word_exist(string s, int n, keyword_block * block);
