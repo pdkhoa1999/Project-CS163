@@ -94,6 +94,7 @@ public:
 	bool is_Match=false; // Feature 9
 	bool is_WildCard=false; // Feature 10
 	bool is_InRange=false; // Feature 11
+	bool is_Feature = false;
 ///////////// Function
 	bool isAnd(string s);// Feature 1
 	bool isOr(string s);//Feature 2
@@ -113,7 +114,6 @@ struct keyword_block
 {
 	string s;
 	pathNode *wordinfo; //contain address and it's frequency
-	int isFeature = 0; // from 1 to  12 kind of feature , if 0 , it's not
 	RankingSystem rank;		
 };
 //To manage each keyword_block
@@ -122,6 +122,8 @@ struct query
 public:
 	query()
 	{
+		for (int i = 0; i < 34; i++)
+			block[i].wordinfo = NULL;
 		num = 0;
 	}
 	void load_Query(string & s,wordTrie  root);
