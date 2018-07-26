@@ -34,7 +34,8 @@ private:
 	string takeWord(ifstream &fin, int &n);
 	void saveInternal(ofstream &fout, wordNode*root, string word);
 	wordNode* Findword(string s, wordNode * root);
-
+	string MakeUpString(string s);
+	string SplitString(string s);
 public:
 	void print();//test print
 	wordTrie() { root = NULL; }
@@ -43,6 +44,8 @@ public:
 	void savewordFile();//save trie to word file
 	bool search(string s, wordNode *root);
 	wordNode* Findword(string s);
+	string ShowMakeUpString(string s);
+	string ShowSplitString(string s);
 };
 bool checkValidation(char x);//check if a valid char or not
 							 //Stopword
@@ -131,7 +134,7 @@ public:
 	void remove_Query(int pos,int &n);
 	int  find_Query(string s); // return block position 
 	bool word_exist(string s);
-	void Linearsearch(wordTrie root,int pos,int & n);
+	bool Linearsearch(wordTrie root,int i);
 	void Exactsearch(string s);
 	void inrange_Feature(int i,wordTrie root,int & n);
 	void plus_Feature(int i, wordTrie root, int n);
@@ -166,7 +169,7 @@ private:
 	void match_FeatureInternal(int i, wordTrie root, int n);
 	void plus_FeatureInternal(int i, wordTrie root, int n);
 	void process_QueryInternal(string s, wordTrie  root, StopWordChaining stopword,int & n);
-	void LinearseachInternal(wordTrie root,int pos, int &n);
+	bool LinearseachInternal(wordTrie root,int i);
 	bool word_exist(string s, int n, keyword_block * block);
 	// Function test
 	void PrintToTest();
@@ -175,4 +178,6 @@ private:
 void ToLower(string & s);
 bool StringCompare(string s1, string s2);
 bool checkValidation(char x);//check if a valid char or not
+bool IsNeeded(string s1, string s2);
+int HashWord(string s, int i);
 #endif
