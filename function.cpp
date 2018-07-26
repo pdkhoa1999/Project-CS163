@@ -527,12 +527,12 @@ void query::match_FeatureInternal(int i, wordTrie root, int n)
 			block[i].wordinfo = temp1->phead;
 		else
 			block[i].wordinfo = NULL;
+		block[i].rank.is_Match = true;
 	}
 	cout << "Match Feature" << endl;
-	for (int i = 0; i < n; i++)
-		cout << block[i].s << endl;
+//	for (int i = 0; i < n; i++)
+	//	cout << block[i].s << endl;
 }
-
 void query::upduate_AddressInternal(int &i, wordTrie root, int &n)
 {
 	if (i >= 0) {
@@ -546,11 +546,13 @@ void query::upduate_AddressInternal(int &i, wordTrie root, int &n)
 		else block[i].wordinfo = temp1->phead;
 	}
 }
-void query::wildcard_FeatureInternal(int i,int n)
+void query::wildcard_FeatureInternal(int i, int n)
 {
-	block[i].rank.is_WildCard = true;
-	for (int j = 0; j < n; j++)
+	cout << "Wilcard Feature" << endl;
+	block[i].wordinfo = NULL;
+	for (int j = 0; j < n; j++) {
 		block[i].rank.is_WildCard = true;
+	}
 }
 void query::file_FeatureInternal(int i, wordTrie root, int n)
 {
@@ -724,12 +726,6 @@ void query::process_QueryInternal(string s, wordTrie  root, StopWordChaining sto
 				i--;
 				continue;
 			}
-			if (block[i].rank.isMatch(block[i].s))
-			{
-				block[i].s.erase(0);
-				for (int j = 0; j < n; j++)
-					block[j].rank.is_Match = true;
-			}
 			if (block[i].rank.isInRange(block[i].s))
 			{
 				isFeature = true;
@@ -781,7 +777,8 @@ void query::process_QueryInternal(string s, wordTrie  root, StopWordChaining sto
 			if (block[i].rank.isWildCard(block[i].s))
 			{
 				isFeature = true;
-				wildcard_Feature(i, n);
+				wildcard_Feature(i, n); 
+				break;
 			}
 			/*if (!isFeature)
 			{
