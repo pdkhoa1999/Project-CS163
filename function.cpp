@@ -98,12 +98,6 @@ void wordTrie::add(string path)
 	}
 	fin.close();
 }
-bool checkValidation(char x)
-{
-	if ((x>64 && x<91) || (x>96 && x<123) || (x >= 48 && x <= 57) || x == '$' || x == '#')
-		return true;
-	return false;
-}
 string wordTrie::takeWord(ifstream &fin, int &n)
 {
 	string word, w;
@@ -350,6 +344,93 @@ wordNode* wordTrie::Findword(string s, wordNode * root)
 	}
 	return NULL;
 }
+string wordTrie::ShowMakeUpString(string s)
+{
+	string makeup = MakeUpString(s);
+	if (IsNeeded(makeup, s)) return makeup;
+	else return "\0";
+}
+string wordTrie::ShowSplitString(string s)
+{
+	string splited = SplitString(s);
+	if (IsNeeded(splited, s)) return splited;
+	else return "\0";
+}
+string wordTrie::MakeUpString(string s)
+{
+	wordNode *cur = root;
+	string result;
+	int i = 0, len = s.length();
+	while (cur != NULL && i<len)
+	{
+		if (!checkValidation(s[i]))
+		{
+			i++;
+			continue;
+		}
+		int t = HashWord(s, i);
+		if (cur->children[t] != NULL)
+		{
+			cur = cur->children[t];
+			result += s[i];
+		}
+		i++;
+	}
+	if (cur->phead == NULL) return "\0";
+
+	return result;
+}
+string wordTrie::SplitString(string s)
+{
+	wordNode *cur = root;
+	string result;
+	int i = 0, len = s.length();
+	int flag = 0;
+	while (cur != NULL && i<len)
+	{
+		if (!checkValidation(s[i]))
+		{
+			i++;
+			continue;
+		}
+		int t = HashWord(s, i);
+		if (cur->children[t] != NULL)
+		{
+			cur = cur->children[t];
+			result += s[i];
+		}
+		else if (cur->phead != NULL)
+		{
+			// this is refresh step			
+			cur = root;
+			i--;
+			// this is split step
+			result += ",";
+			flag = result.length();
+		}
+		else if (cur->phead == NULL)
+		{
+			// this is refresh step
+			cur = root;
+			i--;
+			// clear the redundancy in process
+			result.erase(flag);
+
+		}
+
+
+		i++;
+	}
+	// Clean the worst case
+	if (cur->phead == NULL)
+	{
+
+		result.erase(flag);
+	}
+
+
+	return result;
+}
 //stopword
 void LinkedList::InsertWords(string s, Node *&cur)
 {
@@ -419,6 +500,7 @@ Node* LinkedList::RunFindWord(string s)
 	return FindWord(s, head);
 
 }
+//Support
 bool StringCompare(string s1, string s2)
 {
 
@@ -437,10 +519,44 @@ bool StringCompare(string s1, string s2)
 }
 void ToLower(string & s)
 {
-	for (int i = 0; i < s.length(); i++) s[i]=tolower(s[i]);
+	for (int i = 0; i < s.length(); i++) s[i] = tolower(s[i]);
 	return;
 }
+bool checkValidation(char x)
+{
+	if ((x>64 && x<91) || (x>96 && x<123) || (x >= 48 && x <= 57) || x == '$' || x == '#')
+		return true;
+	return false;
+}
+int HashWord(string s, int i)
+{
+	if ((s[i] >= 'A'&& s[i] <= 90) || s[i] >= 'a' && s[i] <= 'z')
+	{
+		s[i] = tolower(s[i]);
+		return s[i] - 'a';
+	}
+	else if (s[i] >= '0' && s[i] <= '9')
+	{
+		return s[i] - 22;
+	}
+	else if (s[i] == '#')
+	{
+		return 36;
+	}
+	else if (s[i] == '$')
+	{
+		return 37;
+	}
 
+	return 0;
+}
+bool IsNeeded(string s1, string s2)
+{
+	int t = s1.length() * 100 / (s2.length());
+	if (t >= 80) return true;
+	else if (s1.find(",") != std::string::npos && t>70) return true;
+	else return false;
+}
 //Query
 bool query::word_exist(string s)
 {
@@ -462,9 +578,9 @@ void query::remove_Query(int pos,int &n)
 {
 	remove_QueryInternal(pos,n);
 }
-void query::Linearsearch(wordTrie root,int pos,int & n)
+bool query::Linearsearch(wordTrie root,int i)
 {
-	LinearseachInternal(root,pos, n);
+	return LinearseachInternal(root, i);
 }										 
 void query::process_Query(string s, wordTrie  root, StopWordChaining stopword)
 {
@@ -535,13 +651,34 @@ void query::match_FeatureInternal(int i, wordTrie root, int n)
 }
 void query::upduate_AddressInternal(int &i, wordTrie root, int &n)
 {
-	if (i >= 0) {
+	/*if (i >= 0) {
 		wordNode * temp1;
 		temp1 = root.Findword(block[i].s);
 
 		if (temp1 == NULL) {
 			remove_Query(i, n);
 			i--;
+		}
+		else block[i].wordinfo = temp1->phead;
+	}*/
+	if (i >= 0) {
+		wordNode * temp1;
+		temp1 = root.Findword(block[i].s);
+
+
+		if (temp1 == NULL)
+		{
+			if (!Linearsearch(root, i))
+			{
+				remove_Query(i, n);
+				i--;
+			}
+			else
+			{
+				n = num;
+				temp1 = root.Findword(block[i].s);
+				block[i].wordinfo = temp1->phead;
+			}
 		}
 		else block[i].wordinfo = temp1->phead;
 	}
@@ -681,32 +818,50 @@ bool query::word_exist(string s, int n, keyword_block * block)
 		if (block[i].s == s)return true;
 	return false;
 }
-void query::LinearseachInternal(wordTrie root,int pos, int & n)
+bool query::LinearseachInternal(wordTrie root,int i)
 {
-	wordNode* path_node;
-	string temp,prev;
-	string s = block[pos].s;
-	path_node = root.Findword(temp);
-	if(path_node!=NULL)block[pos].wordinfo = path_node->phead;
-	if (s == " ")return;
-	for (int i = 0; i < block[pos].s.length()+1; i++)
+	string linear = root.ShowMakeUpString(block[i].s);
+	if (linear == "\0")
 	{
-		path_node = root.Findword(prev + temp);
-		if (path_node != NULL && prev != "")
+		linear = root.ShowSplitString(block[i].s);
+		if (linear == "\0") return false;
+		else
 		{
-			insert_Query(prev+temp, pos + 1, root);
-			block[pos + 1].wordinfo = path_node->phead;
+			int count = 0;
+			for (int i = 0; i < linear.length(); i++)
+				if (linear[i] == ',')
+				{
+					count++;
+					linear[i] = ' ';
+				}
+			int run = 0;
+			remove_Query(i, num);
+			for (int j = 0; j <= count; j++)
+			{
+				string x;
+				while (linear[run] != ' ' && run<linear.length())
+				{
+					x += linear[run];
+					run++;
+				}
+				run++;
+				insert_Query(x, i, root);
+				i++;
+			}
+			return true;
+
 		}
-		path_node = root.Findword(temp);
-		if (path_node != NULL)
-		{
-			insert_Query(temp, pos + 1,root);
-			block[pos+1].wordinfo = path_node->phead;
-			prev += temp;
-			temp.clear();
-		}
-			temp+=s[i];
+
+
 	}
+	else
+	{
+		remove_Query(i, num);
+		insert_Query(linear, i, root);
+		return true;
+	}
+
+	return false;
 }
 void query::process_QueryInternal(string s, wordTrie  root, StopWordChaining stopword,int &n)
 {	
@@ -810,11 +965,11 @@ void query::ShowPrint()
 	return;
 }
 
-
+//Ranking system
 // Feature 1
 bool RankingSystem::isAnd(string s)
 {
-	if (StringCompare(s, "and") ) return true;
+	if (StringCompare(s, "and") || StringCompare(s,"AND")) return true;
 	else return false;
 
 }
@@ -920,4 +1075,5 @@ void RankingSystem::isFeature(string s)
 	}
 	return;
 }
+
 //////////////////////////////////////////////////
