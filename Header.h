@@ -87,8 +87,10 @@ public:
 class RankingSystem
 {
 public:
+	bool is_Or1 = false;//Feature 2
+	bool is_Or2 = false; //Feature 2
+	
 	bool is_And=false;// Feature 1
-	bool is_Or=false;//Feature 2
 	bool is_Minus=false;// Feature 3
 	bool is_Intitle = false;// Feature 4
 	bool is_File=false;//Feature 6
@@ -135,7 +137,7 @@ public:
 	int  find_Query(string s); // return block position 
 	bool word_exist(string s);
 	bool Linearsearch(wordTrie root,int i);
-	void Exactsearch(string s);
+	bool Exactsearch(string s);
 	void inrange_Feature(int i,wordTrie root,int & n);
 	void plus_Feature(int i, wordTrie root, int n);
 	void and_Feature(int i, int n);
@@ -170,7 +172,7 @@ private:
 	void plus_FeatureInternal(int i, wordTrie root, int n);
 	void process_QueryInternal(string s, wordTrie  root, StopWordChaining stopword,int & n);
 	bool LinearseachInternal(wordTrie root,int i);
-	bool word_exist(string s, int n, keyword_block * block);
+	bool word_exist(string s, int n, keyword_block block[]);
 	// Function test
 	void PrintToTest();
 };
