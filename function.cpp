@@ -706,7 +706,9 @@ void query::intitle_FeatureInternal(int i, wordTrie root, int n)
 	string temp = block[i].s;
 	remove_Query(i, n);
 	insert_Query(temp, i, root);
-	block[i].rank.is_Intitle = true;
+	for (int j = i; j < n; j++) {
+		block[i].rank.is_Intitle = true;
+	}
 }
 void query::minus_FeatureInternal(int i, wordTrie root, int n)
 {
@@ -718,7 +720,11 @@ void query::minus_FeatureInternal(int i, wordTrie root, int n)
 }
 void query::or_FeatureInternal(int i, int n)
 {
-	if (i > 1)block[i - 1].rank.is_Or = true;
+	if (i > 1)
+	{
+		for(int j=0;j<i;j++)
+		block[j].rank.is_Or = true;
+	}
 	block[i + 1].rank.is_Or = true;
 	remove_Query(i, n);
 }
