@@ -576,7 +576,7 @@ int query::find_Query(string s)
 }														 
 void query::remove_Query(int pos,int &n)
 {
-	remove_QueryInternal(pos,n);
+	remove_QueryInternal(pos,num);
 }
 bool query::Linearsearch(wordTrie root,int i)
 {
