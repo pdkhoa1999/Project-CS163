@@ -723,9 +723,9 @@ void query::or_FeatureInternal(int i, int n)
 	if (i > 1)
 	{
 		for(int j=0;j<i;j++)
-		block[j].rank.is_Or = true;
+		block[j].rank.is_Or1 = true;
 	}
-	block[i + 1].rank.is_Or = true;
+	block[i + 1].rank.is_Or2 = true;
 	remove_Query(i, n);
 }
 void query::and_FeatureInternal(int i, int n)
@@ -818,7 +818,7 @@ void query::remove_QueryInternal(int pos, int &n)
 	}
 	n--;
 }
-bool query::word_exist(string s, int n, keyword_block * block)
+bool query::word_exist(string s, int n, keyword_block block[])
 {
 	for (int i = 0; i < n; i++)
 		if (block[i].s == s)return true;
