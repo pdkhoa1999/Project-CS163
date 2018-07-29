@@ -9,7 +9,7 @@
 #include <time.h>
 #include <filesystem>
 using namespace std;
-//HANDLE  hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
 
 //Loading
 struct pathNode {//contain data of a single word
@@ -146,12 +146,18 @@ public:
 	void intitle_Feature(int i, wordTrie root, int n);
 	void file_Feature(int i, wordTrie root, int n);
 	void wildcard_Feature(int i,int n);
+	void hashtag_Feature(int &i,wordTrie root, int n);
 	void match_Feature(int i, wordTrie root, int n);
 	void process_Query(string s,wordTrie  root, StopWordChaining  stopword);
 	void upduate_Address(int &i, wordTrie root, int &n);
+	int min_location(string path);
+	int max_location(string path);
+	bool is_Print(string s);
 	void clear_Query();
 	// Function test
 	void ShowPrint();
+	void Print_process(string path);
+	void Print_paragraph(string s);
 private:
 	keyword_block block[34];
 	int  num=0;  
@@ -169,10 +175,16 @@ private:
 	void minus_FeatureInternal(int i, wordTrie root, int n);
 	void or_FeatureInternal(int i, int n);
 	void match_FeatureInternal(int i, wordTrie root, int n);
+	void hashtag_FeatureInternal(int &i, wordTrie root, int n);
 	void plus_FeatureInternal(int i, wordTrie root, int n);
 	void process_QueryInternal(string s, wordTrie  root, StopWordChaining stopword,int & n);
 	bool LinearseachInternal(wordTrie root,int i);
 	bool word_exist(string s, int n, keyword_block block[]);
+	void Print_processInternal(string path, int n);
+	int min_locationInternal(string path);
+	int max_locationInternal(string path);
+	bool is_PrintInternal(string s);
+	void Print_paragraphInternal(string s);
 	// Function test
 	void PrintToTest();
 };
