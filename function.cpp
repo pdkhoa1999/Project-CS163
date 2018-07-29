@@ -1,5 +1,6 @@
 #include "Header.h"
 StopWordChaining sw;
+HANDLE  hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 void wordTrie::add(string path)
 {
 
@@ -552,6 +553,7 @@ int HashWord(string s, int i)
 }
 bool IsNeeded(string s1, string s2)
 {
+	if (s2 == "")return false;
 	int t = s1.length() * 100 / (s2.length());
 	if (t >= 80) return true;
 	else if (s1.find(",") != std::string::npos && t>70) return true;
@@ -570,7 +572,7 @@ void query::insert_Query(string s, int pos,wordTrie root)
 {
 	insert_QueryInternal(s,pos,root,num);
 }
-int query::find_Query(string s)
+int  query::find_Query(string s)
 {
 	return find_QueryInternal(s, num);
 }														 
@@ -630,7 +632,130 @@ void query::match_Feature(int i, wordTrie root, int n)
 {
 	match_FeatureInternal(i, root, n);
 }
-
+void query::hashtag_Feature(int &i, wordTrie root, int n)
+{
+	hashtag_FeatureInternal(i, root, n);
+}
+//Query	 -->    Print process
+void query::Print_process(string path)
+{
+	Print_processInternal(path,num);
+}
+int  query::min_location(string path)
+{
+	return min_locationInternal(path);
+}
+int  query::max_location(string path)
+{
+	return max_locationInternal(path);
+}
+bool query::is_Print(string s)
+{
+	return is_PrintInternal(s);
+}
+void query::Print_paragraph(string s)
+{
+	Print_paragraphInternal(s);
+}
+void query::Print_processInternal(string path, int n)
+{
+	ifstream fin;
+	string temp;
+	fin.open(path);
+	bool firsttime = true;
+	bool iscont = false;
+	int min = min_location(path);
+	int max = max_location(path);
+	while (!fin.eof())
+	{
+		getline(fin, temp, '\n');
+		if (is_Print(temp)) {
+			Print_paragraph(temp);
+			firsttime = false;
+			iscont = false;
+		}
+		else
+			if ( !firsttime && !iscont ) {
+				cout << "...";
+				iscont = true;
+			}
+	}
+	cout << endl;
+	fin.close();
+}
+void query::Print_paragraphInternal(string s)
+{
+	string temp;
+	for (int i = 0; i < s.length() + 1; i++)
+	{
+		temp += s[i];
+		if (word_exist(temp))
+		{
+			SetConsoleTextAttribute(hConsole, 12);
+			cout << temp;
+			temp.clear();
+		}else
+			if (s[i] == ' ' || s[i] == '.')
+			{
+				SetConsoleTextAttribute(hConsole, 7);
+				cout << temp;
+				temp.clear();
+			}
+	}
+}
+bool query::is_PrintInternal(string s)
+{
+	string temp;
+	for (int i = 0; i < s.length() + 1; i++)
+	{
+		temp += s[i];
+		if (s[i] == ' ')
+		{
+			temp.clear();
+		}
+		if (word_exist(temp))return true;
+	}
+	return false;
+}
+int query::max_locationInternal(string path)
+{
+	int max=0;
+	for (int i = 0; i < num; i++)
+	{
+		pathNode * temp = block[i].wordinfo;
+		while (temp != NULL)
+		{
+			if (StringCompare(path, temp->path))
+			{
+				if (max < temp->occurance)
+					max = temp->occurance;
+				break;   //just for reducing time running
+			}
+			temp = temp->pnext;
+		}
+	}
+	return max;
+}
+int query::min_locationInternal(string path)
+{
+	int min = INT_MAX;
+	for (int i = 0; i < num; i++)
+	{
+		pathNode * temp = block[i].wordinfo;
+		while (temp != NULL)
+		{
+			if (StringCompare(path, temp->path))
+			{
+				if (min < temp->occurance)
+					min = temp->occurance;
+				break;   //just for reducing time running
+			}
+			temp = temp->pnext;
+		}
+	}
+	return min;
+}
+//Query   --> Query process
 void query::match_FeatureInternal(int i, wordTrie root, int n)
 {
 	block[0].s.erase(0,1);
@@ -734,6 +859,32 @@ void query::and_FeatureInternal(int i, int n)
 	block[i + 1].rank.is_And = true;
 	remove_Query(i, n);
 }
+void query::hashtag_FeatureInternal(int & i , wordTrie root, int n)
+{
+	insert_Query(block[i].s, i+1, root);
+	block[i].rank.is_Hashtags = true;
+	wordNode * temp1;
+	temp1 = root.Findword(block[i].s);
+	if(temp1!=NULL)block[i].wordinfo = temp1->phead;
+	block[i].rank.is_Hashtags = true;
+	i++;
+		if (temp1 == NULL)
+		{
+			if (!Linearsearch(root, i))
+			{
+				remove_Query(i, n);
+				i--;
+			}
+			else
+			{
+				n = num;
+				temp1 = root.Findword(block[i].s);
+				block[i].wordinfo = temp1->phead;
+			}
+		}
+		else block[i].wordinfo = temp1->phead;
+		block[i].rank.is_Hashtags = true;
+}
 void query::plus_FeatureInternal(int i, wordTrie root, int n)
 {
 	block[i].s.erase(0, 1);
@@ -821,7 +972,7 @@ void query::remove_QueryInternal(int pos, int &n)
 bool query::word_exist(string s, int n, keyword_block block[])
 {
 	for (int i = 0; i < n; i++)
-		if (block[i].s == s)return true;
+		if (StringCompare(block[i].s,s))return true;
 	return false;
 }
 bool query::LinearseachInternal(wordTrie root,int i)
@@ -933,7 +1084,7 @@ void query::process_QueryInternal(string s, wordTrie  root, StopWordChaining sto
 			if (block[i].rank.isHashtags(block[i].s))
 			{
 				isFeature = true;
-				block[i].rank.is_Hashtags;
+				hashtag_Feature(i, root, n);
 			}
 			if (block[i].rank.isWildCard(block[i].s))
 			{
@@ -951,6 +1102,8 @@ void query::process_QueryInternal(string s, wordTrie  root, StopWordChaining sto
 }
 void query:: PrintToTest()
 {
+	string path;
+	//path = block[0].wordinfo->path;
 	if (num == 0)cout << "Not Found !!!" << endl;
 	else {
 		for (int i = 0; i < num; i++)
@@ -963,6 +1116,7 @@ void query:: PrintToTest()
 			}
 		}
 	}
+	//Print_process(path);
 	return;
 }
 void query::ShowPrint()
