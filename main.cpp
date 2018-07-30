@@ -3,18 +3,22 @@
 
 int main()
 {
-	keyword_block *block;
+
 	clock_t start = clock();
 	query q;
 	StopWordChaining stopword;
 	wordTrie fuck;
+	string s = "$";
+	cout << StringtoNumber(s) << endl;
 	/*string path = "data\\";
 	for (auto & p : std::experimental::filesystem::directory_iterator(path)) {
-		string p2 = p.path().string();
+	string p2 = p.path().string();
 	//	cout << p2 << endl;
-		fuck.add(p2);
+	fuck.add(p2);
 	}
 	fuck.savewordFile();*/
+
+
 	fuck.loadwordFile("word.txt");
 	string query;
 	cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << endl;
@@ -22,35 +26,26 @@ int main()
 	{
 		cout << "Enter:";
 		getline(cin, query);
-		q.process_Query(query, fuck, stopword);  
-		//if (stopword.isStopWord(query)) cout << "good!";
-		//else cout << "fail!";
-		/*cout << "Position to add:";
-		string s1;
-		int n;
-		cin >> n;
-		cout << "String to add:";
-		cin.ignore();
-		getline(cin, s1, '\n');	
-		q.insert_Query(s1, n);
-		q.ShowPrint();
+		clock_t begin = clock();
+		q.process_Query(query, fuck, stopword);
 		cout << endl;
-		cout << "String to remove:";
-		string s;
-		getline(cin, s,'\n');
-		q.remove_Query(s);*/
-		q.ShowPrint();
+		//q.calculate_Occurance();		
+		q.processFeature();
+		q.preRanking();
+		q.printOccurance_in1path();
+		//q.print_top5();
 		q.clear_Query();
-		cout << endl;
+		q.clear_occurance1path();
+		clock_t end = clock();
+		cout << "Time run: " << (float)(end - begin) / CLOCKS_PER_SEC << " s" << endl;
 	}
-
 	/*while (query != "0") {
-		q.insert_query(query, fuck,stopword);
-		cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << endl;
-		cout << "Enter:";
-		getline(cin, query);
+	q.insert_query(query, fuck,stopword);
+	cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << endl;
+	cout << "Enter:";
+	getline(cin, query);
 	}*/
-	
+
 	//if (fuck.search(query))cout << "YES" << endl;
 	//else cout << "NO" << endl;
 	clock_t finish = clock();
