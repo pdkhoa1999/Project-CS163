@@ -1041,13 +1041,16 @@ void query::Print_processInternal(string path, int n)
 	bool iscont = false;
 	//int min = min_location(path);
 	//int max = max_location(path);
+	int count = 0;
 	while (!fin.eof())
 	{
+		if (count == 3)break;
 		getline(fin, temp, '\n');
 		if (is_Print(temp)) {
 			Print_paragraph(temp);
 			firsttime = false;
 			iscont = false;
+			count++;
 		}
 		else
 			if (!firsttime && !iscont) {
@@ -1069,6 +1072,7 @@ void query::Print_paragraphInternal(string s)
 			SetConsoleTextAttribute(hConsole, 12);
 			cout << temp;
 			temp.clear();
+			SetConsoleTextAttribute(hConsole, 7);
 		}
 		else
 			if (s[i] == ' ' || s[i] == '.')
@@ -1205,6 +1209,53 @@ void query::occur_nearword_RankingInternal()
 	}
 	delete[] arr;
 }
+void query::idensity_Ranking()
+{
+	idensity_RankingInternal();
+}
+void query::idensity_RankingInternal()
+{
+	int n = rankingNum;
+	int index = 1;
+	int count = 0;
+	while (n != 0)
+	{
+		for (int i = 0; i < num; i++)
+		{
+			//find common path
+			while (block[i].wordinfo != NULL)
+			{
+				count = 0;
+				for (int j = i + 1; j < num; j++)
+				{
+					//check path of this block
+					if (is_Commonpath(j, block[i].wordinfo->path))
+						count++;
+				}
+				if (count == n)
+				{
+					ranking[index].path = block[i].wordinfo->path;
+					index++;
+				}
+				block[i].wordinfo=block[i].wordinfo->pnext;
+			}
+		}
+		n--;
+	}
+}
+bool query::is_Commonpath(int pos,string path)
+{
+	return is_CommonpathInternal(pos,path);
+}
+bool query::is_CommonpathInternal(int pos,string path)
+{
+	while (block[pos].wordinfo != NULL)
+	{
+		if (StringCompare(path, block[pos].wordinfo->path))return true;
+		block[pos].wordinfo = block[pos].wordinfo->pnext;
+	}
+	return false;
+}
 
 //Huy
 int query::posANDOR()
@@ -1311,6 +1362,7 @@ void query::preRankingInternal()
 		if (ranking[i].path != "")
 			rankingNum++;
 	}
+	idensity_Ranking();
 	for (int i = 1; i < rankingNum; i++)
 	{
 		for (int j = 1; j < i; j++)
@@ -1319,7 +1371,7 @@ void query::preRankingInternal()
 				swap(ranking[j], ranking[i]);
 		}
 	}
-	occur_nearword_Ranking();
+	//occur_nearword_Ranking();
 }
 void query::preRanking()
 {
@@ -1327,7 +1379,6 @@ void query::preRanking()
 }
 void query::processFeatureInternal()
 {
-	//preRanking();
 
 	/*Feature 9 (done)*/ if (block[0].rank.is_Match)
 	{
@@ -1675,6 +1726,7 @@ void query::processFeatureInternal()
 			}
 		}
 	}
+	preRanking();
 }
 void query::printOccurance_in1pathInternal()
 {
