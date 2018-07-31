@@ -10,8 +10,6 @@
 #include <filesystem>
 #include <algorithm>
 using namespace std;
-//HANDLE  hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
 //Loading
 struct pathNode {//contain data of a single word
 	string path;
@@ -168,6 +166,8 @@ public:
 	//Minh - ranking
 	void occur_nearword_Ranking();
 	int is_Near(string path);
+	void idensity_Ranking();
+	bool is_Commonpath(int pos,string path);
 
 	//Huy
 	void preRanking();
@@ -213,7 +213,8 @@ private:
 	//Minh - ranking
 	int  is_NearInternal(string path);
 	void occur_nearword_RankingInternal();
-
+	void idensity_RankingInternal();
+	bool is_CommonpathInternal(int pos,string path);
 
 	//Huy
 	void preRankingInternal();
