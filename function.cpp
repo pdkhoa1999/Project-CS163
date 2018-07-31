@@ -1039,8 +1039,6 @@ void query::Print_processInternal(string path, int n)
 	fin.open(path);
 	bool firsttime = true;
 	bool iscont = false;
-	//int min = min_location(path);
-	//int max = max_location(path);
 	int count = 0;
 	while (!fin.eof())
 	{
@@ -1048,6 +1046,7 @@ void query::Print_processInternal(string path, int n)
 		getline(fin, temp, '\n');
 		if (is_Print(temp)) {
 			Print_paragraph(temp);
+			if (firsttime)cout << endl;
 			firsttime = false;
 			iscont = false;
 			count++;
@@ -1317,30 +1316,9 @@ void query::clear_occurance1path()
 {
 	clear_Occurance1pathInternal();
 }
-void query::clear_Occurance1pathInternal()
+void query::processFeature(StopWordChaining stopword)
 {
-	for (int i = 1; i <= 100; i++)
-	{
-		ranking[i].occurance_in1path = 0;
-		ranking[i].path = "";
-		ranking[i].is_Feature = false;
-		ranking[i].is_Minus = false;
-		ranking[i].is_File = false;
-		ranking[i].is_And = false;
-		ranking[i].is_Hashtags = false;
-		ranking[i].is_Intitle = false;
-		ranking[i].is_Or1 = false;
-		ranking[i].is_WildCard = false;
-		ranking[i].is_Match = false;
-		ranking[i].is_InRange = false;
-		ranking[i].is_Price = false;
-		ranking[i].rankingPoint = 0;
-		ranking[i].inTitle = 0;
-	}
-}
-void query::processFeature()
-{
-	processFeatureInternal();
+	processFeatureInternal(stopword);
 }
 void query::preRankingInternal()
 {
@@ -1363,6 +1341,7 @@ void query::preRankingInternal()
 			rankingNum++;
 	}
 	idensity_Ranking();
+	//occur_nearword_Ranking();
 	for (int i = 1; i < rankingNum; i++)
 	{
 		for (int j = 1; j < i; j++)
@@ -1371,362 +1350,10 @@ void query::preRankingInternal()
 				swap(ranking[j], ranking[i]);
 		}
 	}
-	//occur_nearword_Ranking();
 }
 void query::preRanking()
 {
 	preRankingInternal();
-}
-void query::processFeatureInternal()
-{
-
-	/*Feature 9 (done)*/ if (block[0].rank.is_Match)
-	{
-		pathNode *temp = block[0].wordinfo;
-		//int t = num;
-		while (block[0].wordinfo != NULL)
-		{
-			int t = (int(block[0].wordinfo->path.at(16)) - 48) * 10 + int((block[0].wordinfo->path.at(17) - 48));
-			if (block[0].wordinfo->path.at(18) == '0')
-				t = 100;
-			ranking[t].occurance_in1path += block[0].wordinfo->occurance;
-			ranking[t].rankingPoint++;
-			ranking[t].path = block[0].wordinfo->path;
-			block[0].wordinfo = block[0].wordinfo->pnext;
-		}
-		block[0].wordinfo = temp;
-		for (int i = 1; i <= 100; i++)
-		{
-			if (ranking[i].path != "")
-			{
-				ifstream fin;
-				fin.open(ranking[i].path);
-				while (!fin.eof())
-				{
-					string word;
-					fin >> word;
-					if (block[0].s == word)
-					{
-						int count = 1;
-						for (int j = 1; j < num; j++)
-						{
-							fin >> word;
-							if (word == block[j].s)
-								count++;
-						}
-						if (count == num)
-						{
-							ranking[i].is_Match = true;
-							ranking[i].is_Feature = true;
-							continue;
-						}
-					}
-				}
-				fin.close();
-			}
-		}
-
-	}
-	/*Feature 10 (done)*/	for (int i = 0; i < num; i++)
-	{
-		if (block[i].rank.is_WildCard)
-		{
-			if (i == 0)
-			{
-				pathNode *temp = block[1].wordinfo;
-				//int t = num;
-				while (block[1].wordinfo != NULL)
-				{
-					int t = (int(block[1].wordinfo->path.at(16)) - 48) * 10 + int((block[1].wordinfo->path.at(17) - 48));
-					if (block[1].wordinfo->path.at(18) == '0')
-						t = 100;
-					ranking[t].occurance_in1path += block[1].wordinfo->occurance;
-					ranking[t].path = block[1].wordinfo->path;
-					ranking[t].rankingPoint++;
-					block[1].wordinfo = block[1].wordinfo->pnext;
-				}
-				block[1].wordinfo = temp;
-				for (int i = 1; i <= 100; i++)
-				{
-					if (ranking[i].path != "")
-					{
-						ifstream fin;
-						fin.open(ranking[i].path);
-						while (!fin.eof())
-						{
-							string word;
-							string temp;
-							fin >> word;
-							if (block[1].s == word)
-							{
-								if (num == 2)
-								{
-									ranking[i].is_WildCard = true;
-									ranking[i].is_Feature = true;
-									continue;
-								}
-								int count = 2;
-								for (int j = 2; j < num; j++)
-								{
-									fin >> word;
-									if (word == block[j].s)
-										count++;
-								}
-								if (count == num)
-								{
-									ranking[i].is_WildCard = true;
-									ranking[i].is_Feature = true;
-									continue;
-								}
-							}
-						}
-						fin.close();
-					}
-				}
-			}
-			else if (i > 0)
-			{
-				pathNode *temp = block[0].wordinfo;
-				//int t = num;
-				while (block[0].wordinfo != NULL)
-				{
-					int t = (int(block[0].wordinfo->path.at(16)) - 48) * 10 + int((block[0].wordinfo->path.at(17) - 48));
-					if (block[0].wordinfo->path.at(18) == '0')
-						t = 100;
-					ranking[t].occurance_in1path += block[0].wordinfo->occurance;
-					ranking[t].path = block[0].wordinfo->path;
-					block[0].wordinfo = block[0].wordinfo->pnext;
-				}
-				block[0].wordinfo = temp;
-				for (int i = 1; i <= 100; i++)
-				{
-					if (ranking[i].path != "")
-					{
-						ifstream fin;
-						fin.open(ranking[i].path);
-						while (!fin.eof())
-						{
-							string word;
-							string temp;
-							fin >> word;
-							if (block[0].s == word)
-							{
-								int count = 1;
-								for (int j = 1; j < num; j++)
-								{
-									if (block[j].s == "*")
-									{
-										fin >> word;
-										count++;
-									}
-									else
-									{
-										fin >> word;
-										if (word == block[j].s)
-											count++;
-									}
-								}
-								if (count == num)
-								{
-									ranking[i].rankingPoint++;
-									ranking[i].is_WildCard = true;
-									ranking[i].is_Feature = true;
-									continue;
-								}
-							}
-						}
-						fin.close();
-					}
-				}
-			}
-
-		}
-	}
-	/*normal search + (AND and OR)*/ for (int i = 0; i < num; i++)
-	{
-		if (block[i].s != "*" && !block[i].rank.is_Feature)
-		{
-			pathNode *temp = block[i].wordinfo;
-			while (block[i].wordinfo != NULL)
-			{
-				int t = (int(block[i].wordinfo->path.at(16)) - 48) * 10 + int((block[i].wordinfo->path.at(17) - 48));
-				if (block[i].wordinfo->path.at(18) == '0')
-					t = 100;
-				ranking[t].occurance_in1path += block[i].wordinfo->occurance;
-				ranking[t].path = block[i].wordinfo->path;
-				//ranking[t].is_Feature = false;
-				ranking[t].rankingPoint++;
-
-				block[i].wordinfo = block[i].wordinfo->pnext;
-			}
-			block[i].wordinfo = temp;
-		}
-		/*Feature 1*/ if ((block[i].s != "*"&&block[i].rank.is_And))
-		{
-			pathNode *temp = block[i].wordinfo;
-			while (block[i].wordinfo != NULL)
-			{
-				int t = (int(block[i].wordinfo->path.at(16)) - 48) * 10 + int((block[i].wordinfo->path.at(17) - 48));
-				if (block[i].wordinfo->path.at(18) == '0')
-					t = 100;
-				pathNode *temp2 = block[i].wordinfo;
-				while (block[i - 1].wordinfo != NULL)
-				{
-					if (ranking[t].path != ""&&ranking[t].path == block[i - 1].wordinfo->path)
-					{
-						ranking[t].occurance_in1path += block[i].wordinfo->occurance;
-						ranking[t].is_And = true;
-						ranking[t].is_Feature = true;
-						ranking[t].rankingPoint++;
-					}
-					block[i - 1].wordinfo = block[i - 1].wordinfo->pnext;
-				}
-				block[i - 1].wordinfo = temp2;
-				block[i].wordinfo = block[i].wordinfo->pnext;
-			}
-			block[i].wordinfo = temp;
-		}
-		/*Feature 2*/ if (block[i].s != "*"&&block[i].rank.is_Or)
-		{
-			pathNode *temp = block[i].wordinfo;
-			while (block[i].wordinfo != NULL)
-			{
-				int t = (int(block[i].wordinfo->path.at(16)) - 48) * 10 + int((block[i].wordinfo->path.at(17) - 48));
-				if (block[i].wordinfo->path.at(18) == '0')
-					t = 100;
-				if (ranking[t].path == "")
-				{
-					ranking[t].occurance_in1path += block[i].wordinfo->occurance;
-					ranking[t].is_Or = true;
-					ranking[t].is_Feature = true;
-					ranking[t].path = block[i].wordinfo->path;
-					ranking[t].rankingPoint++;
-				}
-				block[i].wordinfo = block[i].wordinfo->pnext;
-			}
-			block[i].wordinfo = temp;
-		}
-
-	}
-	for (int i = 0; i < num; i++)
-	{
-		if (!block[i].rank.is_Feature)
-			continue;
-		if (block[i].rank.is_Feature)
-		{
-			pathNode *temp = block[i].wordinfo;
-			/*Feature 3 (done)*/ if (block[i].rank.is_Minus)
-			{
-				while (block[i].wordinfo != NULL)
-				{
-					for (int j = 1; j <= 100; j++)
-					{
-						if (ranking[j].path == block[i].wordinfo->path)
-						{
-							ranking[j].path = "";
-						}
-					}
-					block[i].wordinfo = block[i].wordinfo->pnext;
-				}
-				block[i].wordinfo = temp;
-			}
-			/*Feature 4 (done)*/ if (block[i].rank.is_Intitle)
-			{
-				for (int j = 1; j <= 100; j++)
-				{
-					if (ranking[j].path != "")
-					{
-						ifstream fin;
-						string title;
-						fin.open(ranking[j].path);
-						getline(fin, title);
-						string word;
-						for (int z = 0; z < title.length() + 1; z++)
-						{
-							if (title[z] == ' ' || z == title.length())
-							{
-								ToLower(word);
-								ToLower(block[i].s);
-								if (word == block[i].s)
-								{
-									ranking[j].is_Intitle = true;
-									ranking[j].is_Feature = true;
-									word.clear();
-								}
-								else word.clear();
-							}
-							else
-								word += title[z];
-						}
-						fin.close();
-					}
-				}
-			}
-			/*Feature 6 done)*/ if (block[i].rank.is_File)
-			{
-				for (int j = 1; j <= 100; j++)
-				{
-					if (ranking[j].path != ""&&ranking[j].path.substr(19, 3) == block[i].s)
-					{
-						ranking[j].is_File = true;
-						ranking[j].is_Feature = true;
-						ranking[j].rankingPoint++;
-					}
-				}
-			}
-			/*Feature 7 (done)*/ if (block[i].rank.is_Price)
-			{
-				for (int j = 1; j <= 100; j++)
-				{
-					pathNode *temp = block[i].wordinfo;
-					while (block[i].wordinfo != NULL)
-					{
-						int t = (int(block[i].wordinfo->path.at(16)) - 48) * 10 + int((block[i].wordinfo->path.at(17) - 48));
-						if (block[i].wordinfo->path.at(18) == '0')
-							t = 100;
-						if (ranking[t].path != "")
-						{
-							ranking[t].is_Price = true;
-							ranking[t].is_Feature = true;
-						}
-						ranking[t].occurance_in1path += block[i].wordinfo->occurance;
-						ranking[t].path = block[i].wordinfo->path;
-						ranking[t].rankingPoint++;
-						block[i].wordinfo = block[i].wordinfo->pnext;
-					}
-					block[i].wordinfo = temp;
-				}
-			}
-			/*Feature 11 (not yet)*/if (block[i].rank.is_InRange)
-			{
-				int high = StringtoNumber(block[i].s);
-				int low = StringtoNumber(block[i + 1].s);
-				for (int j = 1; j <= 100; j++)
-				{
-					if (ranking[j].path != "")
-					{
-						ifstream fin;
-						fin.open(ranking[j].path);
-						while (!fin.eof())
-						{
-							string word;
-							fin >> word;
-							//if (checkNumber(word))
-							//{
-							if (StringtoNumber(word) >= low&&StringtoNumber(word) <= high)
-							{
-								ranking[j].is_InRange = true;
-								ranking[j].is_Feature = true;
-							}
-							//}
-						}
-						fin.close();
-					}
-				}
-			}
-		}
-	}
-	preRanking();
 }
 void query::printOccurance_in1pathInternal()
 {
@@ -1824,6 +1451,458 @@ bool query::ANDorOR()
 		return true;
 	else return false;
 }
+void query::clear_Occurance1pathInternal()
+{
+	for (int i = 1; i <= rankingNum; i++)
+	{
+		ranking[i].occurance_in1path = 0;
+		ranking[i].path = "";
+		ranking[i].is_Feature = false;
+		ranking[i].is_Minus = false;
+		ranking[i].is_File = false;
+		ranking[i].is_And = false;
+		ranking[i].is_Hashtags = false;
+		ranking[i].is_Intitle = false;
+		ranking[i].is_Or = false;
+		ranking[i].is_WildCard = false;
+		ranking[i].is_Match = false;
+		ranking[i].is_InRange = false;
+		ranking[i].is_Price = false;
+		ranking[i].rankingPoint = 0;
+		ranking[i].inTitle = 0;
+		rankingNum = 0;
+	}
+}
+void query::processFeatureInternal(StopWordChaining stopword)
+{
+	/*Feature 9 (done)*/ if (block[0].rank.is_Match)
+	{
+		pathNode *temp = block[0].wordinfo;
+		//int t = num;
+		while (block[0].wordinfo != NULL)
+		{
+			int t = (int(block[0].wordinfo->path.at(16)) - 48) * 10 + int((block[0].wordinfo->path.at(17) - 48));
+			if (block[0].wordinfo->path.at(18) == '0')
+				t = 100;
+			if (!stopword.isStopWord(block[0].s))
+				ranking[t].occurance_in1path += block[0].wordinfo->occurance;
+			ranking[t].rankingPoint++;
+			ranking[t].path = block[0].wordinfo->path;
+			block[0].wordinfo = block[0].wordinfo->pnext;
+		}
+		block[0].wordinfo = temp;
+		for (int i = 1; i <= 100; i++)
+		{
+			if (ranking[i].path != "")
+			{
+				ifstream fin;
+				fin.open(ranking[i].path);
+				while (!fin.eof())
+				{
+					string word;
+					fin >> word;
+					if (block[0].s == word)
+					{
+						int count = 1;
+						for (int j = 1; j < num; j++)
+						{
+							fin >> word;
+							if (word == block[j].s)
+								count++;
+						}
+						if (count == num)
+						{
+							ranking[i].is_Match = true;
+							ranking[i].is_Feature = true;
+							continue;
+						}
+					}
+				}
+				fin.close();
+			}
+		}
+
+	}
+	/*Feature 10 (done)*/	for (int i = 0; i < num; i++)
+	{
+		if (block[i].rank.is_WildCard)
+		{
+			if (i == 0)
+			{
+				pathNode *temp = block[1].wordinfo;
+				//int t = num;
+				while (block[1].wordinfo != NULL)
+				{
+					int t = (int(block[1].wordinfo->path.at(16)) - 48) * 10 + int((block[1].wordinfo->path.at(17) - 48));
+					if (block[1].wordinfo->path.at(18) == '0')
+						t = 100;
+					if (!stopword.isStopWord(block[1].s))
+						ranking[t].occurance_in1path += block[1].wordinfo->occurance;
+					ranking[t].path = block[1].wordinfo->path;
+					ranking[t].rankingPoint++;
+					block[1].wordinfo = block[1].wordinfo->pnext;
+				}
+				block[1].wordinfo = temp;
+				for (int i = 1; i <= 100; i++)
+				{
+					if (ranking[i].path != "")
+					{
+						ifstream fin;
+						fin.open(ranking[i].path);
+						while (!fin.eof())
+						{
+							string word;
+							string temp;
+							fin >> word;
+							if (block[1].s == word)
+							{
+								if (num == 2)
+								{
+									ranking[i].is_WildCard = true;
+									ranking[i].is_Feature = true;
+									continue;
+								}
+								int count = 2;
+								for (int j = 2; j < num; j++)
+								{
+									fin >> word;
+									if (word == block[j].s)
+										count++;
+								}
+								if (count == num)
+								{
+									ranking[i].is_WildCard = true;
+									ranking[i].is_Feature = true;
+									continue;
+								}
+							}
+						}
+						fin.close();
+					}
+				}
+			}
+			else if (i > 0)
+			{
+				pathNode *temp = block[0].wordinfo;
+				//int t = num;
+				while (block[0].wordinfo != NULL)
+				{
+					int t = (int(block[0].wordinfo->path.at(16)) - 48) * 10 + int((block[0].wordinfo->path.at(17) - 48));
+					if (block[0].wordinfo->path.at(18) == '0')
+						t = 100;
+					if (!stopword.isStopWord(block[0].s))
+						ranking[t].occurance_in1path += block[0].wordinfo->occurance;
+					ranking[t].path = block[0].wordinfo->path;
+					block[0].wordinfo = block[0].wordinfo->pnext;
+				}
+				block[0].wordinfo = temp;
+				for (int i = 1; i <= 100; i++)
+				{
+					if (ranking[i].path != "")
+					{
+						ifstream fin;
+						fin.open(ranking[i].path);
+						while (!fin.eof())
+						{
+							string word;
+							string temp;
+							fin >> word;
+							if (block[0].s == word)
+							{
+								int count = 1;
+								for (int j = 1; j < num; j++)
+								{
+									if (block[j].s == "*")
+									{
+										fin >> word;
+										count++;
+									}
+									else
+									{
+										fin >> word;
+										if (word == block[j].s)
+											count++;
+									}
+								}
+								if (count == num)
+								{
+									ranking[i].rankingPoint++;
+									ranking[i].is_WildCard = true;
+									ranking[i].is_Feature = true;
+									continue;
+								}
+							}
+						}
+						fin.close();
+					}
+				}
+			}
+
+		}
+	}
+	/*normal search + (AND and OR)*/ for (int i = 0; i < num; i++)
+	{
+		if (block[i].s != "*" && !block[i].rank.is_Feature)
+		{
+			pathNode *temp = block[i].wordinfo;
+			while (block[i].wordinfo != NULL)
+			{
+				int t = (int(block[i].wordinfo->path.at(16)) - 48) * 10 + int((block[i].wordinfo->path.at(17) - 48));
+				if (block[i].wordinfo->path.at(18) == '0')
+					t = 100;
+				if (!stopword.isStopWord(block[i].s))
+					ranking[t].occurance_in1path += block[i].wordinfo->occurance;
+				ranking[t].path = block[i].wordinfo->path;
+				//ranking[t].is_Feature = false;
+				ranking[t].rankingPoint++;
+				block[i].wordinfo = block[i].wordinfo->pnext;
+			}
+			block[i].wordinfo = temp;
+		}
+		/*Feature 1*/ if ((block[i].s != "*"&&block[i].rank.is_And))
+		{
+			pathNode *temp = block[i].wordinfo;
+			while (block[i].wordinfo != NULL)
+			{
+				int t = (int(block[i].wordinfo->path.at(16)) - 48) * 10 + int((block[i].wordinfo->path.at(17) - 48));
+				if (block[i].wordinfo->path.at(18) == '0')
+					t = 100;
+				pathNode *temp2 = block[i].wordinfo;
+				while (block[i - 1].wordinfo != NULL)
+				{
+					if (ranking[t].path != ""&&ranking[t].path == block[i - 1].wordinfo->path)
+					{
+						if (!stopword.isStopWord(block[i].s))
+							ranking[t].occurance_in1path += block[i].wordinfo->occurance;
+						ranking[t].is_And = true;
+						ranking[t].is_Feature = true;
+						ranking[t].rankingPoint++;
+					}
+					block[i - 1].wordinfo = block[i - 1].wordinfo->pnext;
+				}
+				block[i - 1].wordinfo = temp2;
+				block[i].wordinfo = block[i].wordinfo->pnext;
+			}
+			block[i].wordinfo = temp;
+		}
+		/*Feature 2*/ if (block[i].s != "*"&&block[i].rank.is_Or)
+		{
+			pathNode *temp = block[i].wordinfo;
+			while (block[i].wordinfo != NULL)
+			{
+				int t = (int(block[i].wordinfo->path.at(16)) - 48) * 10 + int((block[i].wordinfo->path.at(17) - 48));
+				if (block[i].wordinfo->path.at(18) == '0')
+					t = 100;
+				if (ranking[t].path == "")
+				{
+					if (!stopword.isStopWord(block[i].s))
+						ranking[t].occurance_in1path += block[i].wordinfo->occurance;
+					ranking[t].is_Or = true;
+					ranking[t].is_Feature = true;
+					ranking[t].path = block[i].wordinfo->path;
+					ranking[t].rankingPoint++;
+				}
+				block[i].wordinfo = block[i].wordinfo->pnext;
+			}
+			block[i].wordinfo = temp;
+		}
+
+	}
+	for (int i = 0; i < num; i++)
+	{
+		if (!block[i].rank.is_Feature)
+			continue;
+		if (block[i].rank.is_Feature)
+		{
+			pathNode *temp = block[i].wordinfo;
+			/*Feature 3 (done)*/ if (block[i].rank.is_Minus)
+			{
+				while (block[i].wordinfo != NULL)
+				{
+					for (int j = 1; j <= 100; j++)
+					{
+						if (ranking[j].path == block[i].wordinfo->path)
+						{
+							ranking[j].path = "";
+						}
+					}
+					block[i].wordinfo = block[i].wordinfo->pnext;
+				}
+				block[i].wordinfo = temp;
+			}
+			/*Feature 4 (done)*/ if (block[i].rank.is_Intitle)
+			{
+				if (i>0)
+				{
+					for (int j = 1; j <= 100; j++)
+					{
+						if (ranking[j].path != "")
+						{
+							ifstream fin;
+							string title;
+							fin.open(ranking[j].path);
+							getline(fin, title);
+							string word;
+							for (int z = 0; z < title.length() + 1; z++)
+							{
+								if (title[z] == ' ' || z == title.length())
+								{
+									ToLower(word);
+									ToLower(block[i].s);
+									if (word == block[i].s)
+									{
+										ranking[j].is_Intitle = true;
+										ranking[j].is_Feature = true;
+										word.clear();
+									}
+									else word.clear();
+								}
+								else
+									word += title[z];
+							}
+							fin.close();
+						}
+					}
+				}
+				else
+				{
+					pathNode *temp = block[i].wordinfo;
+					while (block[i].wordinfo != NULL)
+					{
+						int t = (int(block[i].wordinfo->path.at(16)) - 48) * 10 + int((block[i].wordinfo->path.at(17) - 48));
+						if (block[i].wordinfo->path.at(18) == '0')
+							t = 100;
+						if (!stopword.isStopWord(block[i].s))
+							ranking[t].occurance_in1path += block[i].wordinfo->occurance;
+						ranking[t].path = block[i].wordinfo->path;
+						//ranking[t].is_Feature = false;
+						ranking[t].rankingPoint++;
+						block[i].wordinfo = block[i].wordinfo->pnext;
+					}
+					block[i].wordinfo = temp;
+					for (int j = 1; j <= 100; j++)
+						if (ranking[j].path != "")
+						{
+							ifstream fin;
+							string title;
+							fin.open(ranking[j].path);
+							getline(fin, title);
+							string word;
+							for (int z = 0; z < title.length() + 1; z++)
+							{
+								if (title[z] == ' ' || z == title.length())
+								{
+									ToLower(word);
+									ToLower(block[i].s);
+									if (word == block[i].s)
+									{
+										ranking[j].is_Intitle = true;
+										ranking[j].is_Feature = true;
+										word.clear();
+									}
+									else word.clear();
+								}
+								else
+									word += title[z];
+							}
+							fin.close();
+						}
+				}
+			}
+			/*Feature 6 done)*/ if (block[i].rank.is_File)
+			{
+				if (i>0)
+				{
+					for (int j = 1; j <= 100; j++)
+					{
+						if (ranking[j].path != ""&&ranking[j].path.substr(19, 3) == block[i].s)
+						{
+							ranking[j].is_File = true;
+							ranking[j].is_Feature = true;
+							ranking[j].rankingPoint++;
+						}
+					}
+				}
+				else
+				{
+					ifstream fin;
+					fin.open("address.txt");
+					while (!fin.eof())
+					{
+						for (int i = 1; i < 101; i++)
+						{
+							string address;
+							fin >> address;
+							ranking[i].path = address;
+						}
+					}
+					for (int j = 1; j <= 100; j++)
+					{
+						if (ranking[j].path != ""&&ranking[j].path.substr(19, 3) == block[i].s)
+						{
+							ranking[j].is_File = true;
+							ranking[j].is_Feature = true;
+							ranking[j].rankingPoint++;
+						}
+					}
+
+				}
+			}
+			/*Feature 7 (done)*/ if (block[i].rank.is_Price)
+			{
+				for (int j = 1; j <= 100; j++)
+				{
+					pathNode *temp = block[i].wordinfo;
+					while (block[i].wordinfo != NULL)
+					{
+						int t = (int(block[i].wordinfo->path.at(16)) - 48) * 10 + int((block[i].wordinfo->path.at(17) - 48));
+						if (block[i].wordinfo->path.at(18) == '0')
+							t = 100;
+						if (ranking[t].path != "")
+						{
+							ranking[t].is_Price = true;
+							ranking[t].is_Feature = true;
+						}
+						if (!stopword.isStopWord(block[i].s))
+							ranking[t].occurance_in1path += block[i].wordinfo->occurance;
+						ranking[t].path = block[i].wordinfo->path;
+						ranking[t].rankingPoint++;
+						block[i].wordinfo = block[i].wordinfo->pnext;
+					}
+					block[i].wordinfo = temp;
+				}
+			}
+			/*Feature 11 (not yet)*/if (block[i].rank.is_InRange)
+			{
+				int high = StringtoNumber(block[i].s);
+				int low = StringtoNumber(block[i + 1].s);
+				for (int j = 1; j <= 100; j++)
+				{
+					if (ranking[j].path != "")
+					{
+						ifstream fin;
+						fin.open(ranking[j].path);
+						while (!fin.eof())
+						{
+							string word;
+							fin >> word;
+							//if (checkNumber(word))
+							//{
+							if (StringtoNumber(word) >= low&&StringtoNumber(word) <= high)
+							{
+								ranking[j].is_InRange = true;
+								ranking[j].is_Feature = true;
+							}
+							//}
+						}
+						fin.close();
+					}
+				}
+			}
+		}
+	}
+}
+
 
 //Ranking system
 // Feature 1
