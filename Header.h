@@ -174,7 +174,7 @@ public:
 	void clear_occurance1path();
 	void calculate_Occurance();
 	void printOccurance_in1path();
-	void processFeature();
+	void processFeature(StopWordChaining stopword);
 	void calculateEachBlock();
 	bool notFeature();
 	bool ANDorOR();//check xem co phai feature 1/2 ko
@@ -225,7 +225,7 @@ private:
 	void printOccurance_in1pathInternal();
 	void rankingAndInternal();
 	void calculateEachBlockInternal();
-	void processFeatureInternal();
+	void processFeatureInternal(StopWordChaining stopword);
 	// Function test
 	void PrintToTest();
 };
