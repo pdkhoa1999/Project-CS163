@@ -30,8 +30,8 @@ int main()
 		q.process_Query(query, fuck, stopword);
 		cout << endl;
 		//q.calculate_Occurance();		
-		
-		q.processFeature();
+		q.processFeature(stopword);
+		q.preRanking();
 		q.printOccurance_in1path();
 		q.clear_Query();
 		q.clear_occurance1path();
