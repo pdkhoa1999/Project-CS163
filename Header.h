@@ -5,12 +5,46 @@
 #include<fstream>
 #include<string>
 #include <string.h>
+#include <vector>
 #include <Windows.h>
 #include <time.h>
 #include <filesystem>
 #include <algorithm>
 using namespace std;
 //Loading
+struct Node
+{
+	string s;
+	Node *next;
+	Node()
+	{
+		next = NULL;
+	}
+};
+class LinkedList
+{
+private:
+	void InsertWords(string s, Node *&cur);
+	Node* FindWord(string s, Node*cur);
+public:
+	Node * head;
+	LinkedList()
+	{
+		head = NULL;
+	}
+	void RunInsertWords(string s);
+	Node* RunFindWord(string s);
+};
+struct StopWordChaining
+{
+private:
+	LinkedList arr[420];
+
+public:
+	StopWordChaining();
+	bool isStopWord(string s);
+	int HashWord(string s);
+};
 struct pathNode {//contain data of a single word
 	string path;
 	pathNode* pnext;
@@ -22,7 +56,11 @@ struct wordNode {//one node in the wordtrie
 	pathNode*phead = NULL;
 	int n;
 	wordNode*children[38] = {};
-	wordNode() { n = 0; }
+	int syn;
+	wordNode() {
+	n = 0;
+	syn = -1;
+	}
 
 
 };
@@ -45,43 +83,12 @@ public:
 	wordNode* Findword(string s);
 	string ShowMakeUpString(string s);
 	string ShowSplitString(string s);
+	void addSynonym(LinkedList synWord[50]);
 };
 bool checkValidation(char x);//check if a valid char or not
 							 //Stopword
 							 // Stopwords for feature 
-struct Node
-{
-	string s;
-	Node *next;
-	Node()
-	{
-		next = NULL;
-	}
-};
-class LinkedList
-{
-private:
-	Node * head;
-	void InsertWords(string s, Node *&cur);
-	Node* FindWord(string s, Node*cur);
-public:
-	LinkedList()
-	{
-		head = NULL;
-	}
-	void RunInsertWords(string s);
-	Node* RunFindWord(string s);
-};
-struct StopWordChaining
-{
-private:
-	LinkedList arr[420];
 
-public:
-	StopWordChaining();
-	bool isStopWord(string s);
-	int HashWord(string s);
-};
 //ranking
 class RankingSystem
 {
@@ -101,6 +108,7 @@ public:
 	bool is_Match = false; // Feature 9 //done
 	bool is_WildCard = false; // Feature 10 //done
 	bool is_InRange = false; // Feature 11 //done (maybe?)
+	bool is_Set = false;    // Feature 12
 	bool is_Feature = false;
 	bool morethan1 = false;
 	bool key = false;
@@ -119,6 +127,7 @@ public:
 	bool isMatch(string s); // Feature 9
 	bool isWildCard(string s); // Feature 10
 	bool isInRange(string s); // Feature 11
+	bool isSet(string s);   //Feature 12
 	void isFeature(string s);
 };
 ////////////////////////
@@ -156,13 +165,16 @@ public:
 	void file_Feature(int i, wordTrie root, int n);
 	void wildcard_Feature(int i, int n);
 	void match_Feature(int i, wordTrie root, int n);
+	void synonym_Feature(int i, wordTrie root, int &n);
 	void process_Query(string s, wordTrie  root, StopWordChaining  stopword);
 	void upduate_Address(int &i, wordTrie root, int &n);
 	int min_location(string path);
 	int max_location(string path);
 	bool is_Print(string s);
 	void clear_Query();
-	
+	void SaveToHistory(std::vector<std::string> &dict);
+
+
 	//Minh - ranking
 	void occur_nearword_Ranking();
 	int is_Near(string path);
@@ -181,8 +193,8 @@ public:
 	int posANDOR();//1:full AND 2:full OR 3:AND OR 4:OR AND
 				   // Function test
 	void ShowPrint();
-	void Print_process(string path);
-	void Print_paragraph(string s);
+	void Print_process(string path, bool isWildcard);
+	void Print_paragraph(string s,bool isWildcard);
 private:
 	keyword_block block[34];
 	int  num = 0;
@@ -201,20 +213,25 @@ private:
 	void or_FeatureInternal(int i, int n);
 	void match_FeatureInternal(int i, wordTrie root, int n);
 	void plus_FeatureInternal(int i, wordTrie root, int n);
+	void synonym_FeatureInternal(int i, wordTrie root, int& n);
 	void process_QueryInternal(string s, wordTrie  root, StopWordChaining stopword, int & n);
 	bool LinearseachInternal(wordTrie root, int i);
 	bool word_exist(string s, int n, keyword_block * block);
-	void Print_processInternal(string path, int n);
+	void Print_processInternal(string path, int n,bool isWildcard);
 	int  min_locationInternal(string path);
 	int  max_locationInternal(string path);
 	bool is_PrintInternal(string s);
-	void Print_paragraphInternal(string s);
+	void Print_paragraphInternal(string s, bool isWildcard);
 	
 	//Minh - ranking
 	int  is_NearInternal(string path);
 	void occur_nearword_RankingInternal();
 	void idensity_RankingInternal();
 	bool is_CommonpathInternal(int pos,string path);
+
+	//History
+	void query::History(std::vector<std::string> &dict);
+
 
 	//Huy
 	void preRankingInternal();
@@ -238,4 +255,6 @@ int  StringtoNumber(string s);
 bool checkNumber(string s);
 bool IsNeeded(string s1, string s2);
 int  HashWord(string s, int i);
+string Dictionary(std::vector<std::string> dict, string input);
+void LoadDictionary(std::vector<std::string> &dict);
 #endif
