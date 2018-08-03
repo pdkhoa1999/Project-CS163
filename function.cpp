@@ -629,7 +629,7 @@ void query::or_Feature(int i, int n)
 	or_FeatureInternal(i, n);
 }
 void query::minus_Feature(int i, wordTrie root, int n)
-{
+{ 
 	minus_FeatureInternal(i, root, n);
 }
 void query::intitle_Feature(int i, wordTrie root, int n)
