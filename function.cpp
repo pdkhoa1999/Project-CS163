@@ -433,6 +433,85 @@ string wordTrie::SplitString(string s)
 
 	return result;
 }
+void wordTrie::addSynonym(LinkedList synWord[50])
+{
+	int k;
+	ifstream fin;
+	string a, b;
+	k = 0;
+	fin.open("synonym.txt");
+	if (!fin) {
+		cout << "No synonym file";
+		return;
+	}
+	while (!fin.eof())
+	{
+
+		getline(fin, a);
+		int n = a.length();
+		for (int i = 0; i < n; i++)
+		{
+			if (a[i] != ',')
+			{
+				b += a[i];
+			}
+			else
+			{
+				synWord[k].RunInsertWords(b);
+				b = "";
+			}
+		}
+		k++;
+	}
+	for (int i = 0; i < k; i++)
+	{
+		Node *curN = synWord[i].head;
+		while (curN != NULL) {
+			wordNode*cur = root;
+			for (int j = 0; j < curN->s.length(); j++)
+			{
+
+				char x = tolower(curN->s[j]);
+				if ((x - 'a' >= 26 || x - 'a' < 0) && (x < 48 || x>57) && x != '#'&&x != '$')//if not alphabet ->break
+					break;
+				if (x == '#')
+				{
+					if (cur->children[36] == NULL)
+					{
+						cur->children[36] = new wordNode;
+					}
+					cur = cur->children[36];
+				}
+				else if (x == '$')
+				{
+					if (cur->children[37] == NULL)
+					{
+						cur->children[37] = new wordNode;
+					}
+					cur = cur->children[37];
+				}
+				else if (x >= 48 && x <= 57)
+				{
+					if (cur->children[x - 22] == NULL)
+					{
+						cur->children[x - 22] = new wordNode;
+					}
+					cur = cur->children[x - 22];
+				}
+				else if (x > 57) {
+					if (cur->children[x - 'a'] == NULL)
+					{
+						cur->children[x - 'a'] = new wordNode;
+					}
+					cur = cur->children[x - 'a'];
+				}
+			}
+			cur->syn = i;
+			curN = curN->next;
+		}
+	}
+}
+
 //stopword
 void LinkedList::InsertWords(string s, Node *&cur)
 {
@@ -554,6 +633,7 @@ int HashWord(string s, int i)
 }
 bool IsNeeded(string s1, string s2)
 {
+	if (s2 == "")return false;
 	int t = s1.length() * 100 / (s2.length());
 	if (t >= 80) return true;
 	else if (s1.find(",") != std::string::npos && t>70) return true;
@@ -579,6 +659,94 @@ bool checkNumber(string s)
 	}
 	return true;
 }
+LinkedList findSynonym(wordTrie root, string a)
+{
+	LinkedList synWord[50],null;
+	root.addSynonym(synWord);
+	wordNode *cur = root.Findword(a);
+	if (!cur) return null;
+	int k = cur->syn;
+	return synWord[k];
+
+}
+string Dictionary(std::vector<std::string> dict, string input)
+{
+
+	std::vector<std::string>::iterator it;
+	std::string temp, word;
+	bool done = false;
+
+
+	temp = "";
+	word = "";
+	string str1, str2, str3;
+	int i = 1;
+
+	word += input;
+	for (it = dict.begin(); it != dict.end(); ++it)
+	{
+		if (word == (*it).substr(0, word.length()))
+		{
+			if (i == 1)
+				str1 = (*it);
+			if (i == 2)
+			{
+				if (str1 != *it)
+					str2 = *it;
+				else
+				{
+					i--;
+				}
+			}
+			if (i == 3)
+			{
+				if (str1 != *it && str2 != *it)
+					str3 = *it;
+				else i--;
+			}
+			i++;
+			if (i > 3) break;
+		}
+	}
+	if (i == 1) return input;
+
+	cout << "Do you mean:" << endl;
+	for (int j = 1; j < i; j++)
+	{
+		if (j == 1)
+			cout << j << ". " << str1 << endl;
+		else if (j == 2)
+			cout << j << ". " << str2 << endl;
+		else if (j == 3)
+			cout << j << ". " << str1 << endl;
+		else break;
+	}
+	cout << "Choose your choice:";
+	string s;
+	getline(cin, s);
+	if (s == "1") return str1;
+	else if (s == "2") return str2;
+	else if (s == "3") return str3;
+	else return input;
+}
+void LoadDictionary(std::vector<std::string> &dict)
+{
+	std::ifstream inf;
+	ofstream fout;
+	char check[100];
+
+	inf.open("dict.txt");
+
+	while (!inf.eof())
+	{
+		inf.getline(check, 100, '\n');
+
+		dict.push_back(check);
+	}
+	fout.close();
+	return;
+}
+
 //Query
 bool query::word_exist(string s)
 {
@@ -629,7 +797,7 @@ void query::or_Feature(int i, int n)
 	or_FeatureInternal(i, n);
 }
 void query::minus_Feature(int i, wordTrie root, int n)
-{ 
+{
 	minus_FeatureInternal(i, root, n);
 }
 void query::intitle_Feature(int i, wordTrie root, int n)
@@ -651,6 +819,10 @@ void query::upduate_Address(int &i, wordTrie root, int &n)
 void query::match_Feature(int i, wordTrie root, int n)
 {
 	match_FeatureInternal(i, root, n);
+}
+void query::synonym_Feature(int i, wordTrie root, int &n)
+{
+	synonym_FeatureInternal(i, root, n);
 }
 
 void query::match_FeatureInternal(int i, wordTrie root, int n)
@@ -707,11 +879,11 @@ void query::upduate_AddressInternal(int &i, wordTrie root, int &n)
 }
 void query::wildcard_FeatureInternal(int i, int n)
 {
-	cout << "Wilcard Feature" << endl;
-	block[i].wordinfo = NULL;
+	//cout << "Wilcard Feature" << endl;
+	//remove_Query(i, n);
 	for (int j = 0; j < n; j++) {
-		block[i].rank.is_WildCard = true;
-		block[i].rank.is_Feature = true;
+		block[j].rank.is_WildCard = true;
+		block[j].rank.is_Feature = true;
 	}
 }
 void query::file_FeatureInternal(int i, wordTrie root, int n)
@@ -766,6 +938,27 @@ void query::plus_FeatureInternal(int i, wordTrie root, int n)
 	block[i].rank.is_And = true;
 	block[i].rank.is_Feature = true;
 }
+void query::synonym_FeatureInternal(int i, wordTrie root, int &n)
+{
+	block[i].s.erase(0, 1);
+	string temp = block[i].s;
+	remove_Query(i, n);
+	insert_Query(temp, i, root);
+	block[i ].rank.is_Set = true;
+	block[i ].rank.is_Feature = true;
+	LinkedList syn=findSynonym(root, block[i].s);
+	Node *cur = syn.head;
+	while (cur)
+	{
+		if (StringCompare(block[i].s, cur->s)) cur = cur->next;
+			insert_Query(cur->s, i + 1, root);
+			n++;
+			block[i+1].rank.is_Set = true;
+			block[i+1].rank.is_Feature = true;
+		cur = cur->next;
+	}
+
+}
 void query::inrange_FeatureInternal(int i, wordTrie root, int & n)
 {
 	string temp;
@@ -795,6 +988,11 @@ void query::load_QueryInternal(string & s, wordTrie root, int & n)
 	string temp;
 	for (int i = 0; i < s.length() + 1; i++)
 	{
+		if (n >= 34)
+		{
+			cout << "OUT OF RANGE !!!" << endl;
+			return;
+		}
 		if (s[i] == ' ' || i == s.length())
 		{
 			block[n].s = temp;
@@ -921,12 +1119,6 @@ void query::process_QueryInternal(string s, wordTrie  root, StopWordChaining sto
 			if (block[i].rank.is_And || block[i].rank.is_Or)
 				continue;
 			isFeature = false;
-			/*if (stopword.isStopWord(block[i].s))
-			{
-				remove_Query(i, n);
-				i--;
-				continue;
-			}*/
 			if (block[i].rank.isInRange(block[i].s))
 			{
 				isFeature = true;
@@ -982,10 +1174,10 @@ void query::process_QueryInternal(string s, wordTrie  root, StopWordChaining sto
 				wildcard_Feature(i, n);
 				break;
 			}
-			/*if (!isFeature)
+			if (block[i].rank.isSet(block[i].s))
 			{
-			Linearsearch(root, i, n);
-			}*/
+				synonym_Feature(i, root, n);
+			}
 			upduate_Address(i, root, n);
 		}
 	}
@@ -1012,9 +1204,9 @@ void query::ShowPrint()
 	return;
 }
 //Query	 -->    Print process
-void query::Print_process(string path)
+void query::Print_process(string path,bool isWildcard)
 {
-	Print_processInternal(path, num);
+	Print_processInternal(path, num,isWildcard);
 }
 int  query::min_location(string path)
 {
@@ -1028,12 +1220,16 @@ bool query::is_Print(string s)
 {
 	return is_PrintInternal(s);
 }
-void query::Print_paragraph(string s)
+void query::Print_paragraph(string s,bool isWildcard)
 {
-	Print_paragraphInternal(s);
+	Print_paragraphInternal(s,isWildcard);
 }
-void query::Print_processInternal(string path, int n)
+void query::Print_processInternal(string path, int n,bool isWildcard)
 {
+	if (n >= 34)
+	{
+		return;
+	}
 	ifstream fin;
 	string temp;
 	fin.open(path);
@@ -1045,7 +1241,7 @@ void query::Print_processInternal(string path, int n)
 		if (count == 3)break;
 		getline(fin, temp, '\n');
 		if (is_Print(temp)) {
-			Print_paragraph(temp);
+			Print_paragraph(temp,isWildcard);
 			if (firsttime)cout << endl;
 			firsttime = false;
 			iscont = false;
@@ -1060,26 +1256,61 @@ void query::Print_processInternal(string path, int n)
 	cout << endl;
 	fin.close();
 }
-void query::Print_paragraphInternal(string s)
+void query::Print_paragraphInternal(string s, bool isWildcard)
 {
 	string temp;
-	for (int i = 0; i < s.length() + 1; i++)
+	if (isWildcard)
 	{
-		temp += s[i];
-		if (word_exist(temp))
+		bool wildcard = false;
+		for (int i = 0; i < s.length() + 1; i++)
 		{
-			SetConsoleTextAttribute(hConsole, 12);
-			cout << temp;
-			temp.clear();
-			SetConsoleTextAttribute(hConsole, 7);
-		}
-		else
-			if (s[i] == ' ' || s[i] == '.')
+			temp += s[i];
+			if (word_exist(temp))
 			{
-				SetConsoleTextAttribute(hConsole, 7);
+				SetConsoleTextAttribute(hConsole, 12);
 				cout << temp;
 				temp.clear();
+				SetConsoleTextAttribute(hConsole, 7);
+				wildcard = true;
 			}
+			else
+				if (s[i] == ' ' || s[i] == '.')
+				{
+					if (wildcard && temp!=" ")
+					{
+						SetConsoleTextAttribute(hConsole, 12);
+						cout << temp;
+						temp.clear();
+						SetConsoleTextAttribute(hConsole, 7);
+						wildcard = false;
+					}
+					else {
+						SetConsoleTextAttribute(hConsole, 7);
+						cout << temp;
+						temp.clear();
+					}
+				}
+		}
+	}
+	else {
+		for (int i = 0; i < s.length() + 1; i++)
+		{
+			temp += s[i];
+			if (word_exist(temp))
+			{
+				SetConsoleTextAttribute(hConsole, 12);
+				cout << temp;
+				temp.clear();
+				SetConsoleTextAttribute(hConsole, 7);
+			}
+			else
+				if (s[i] == ' ' || s[i] == '.')
+				{
+					SetConsoleTextAttribute(hConsole, 7);
+					cout << temp;
+					temp.clear();
+				}
+		}
 	}
 }
 bool query::is_PrintInternal(string s)
@@ -1357,6 +1588,11 @@ void query::preRanking()
 }
 void query::printOccurance_in1pathInternal()
 {
+	if (block[0].s == "0")
+	{
+		cout << "END!" << endl;
+		return;
+	}
 	if (notFeature())
 	{
 		for (int i = 1; i <= 5; i++)
@@ -1365,7 +1601,7 @@ void query::printOccurance_in1pathInternal()
 			{
 				cout << ranking[i].path << endl;
 				cout << "/////////////////////////////////////////////////" << endl;
-				Print_process(ranking[i].path);
+				Print_process(ranking[i].path,block[0].rank.is_WildCard);
 				cout << "/////////////////////////////////////////////////" << endl;
 				//cout << " occurance:" << ranking[i].occurance_in1path << endl;
 			}
@@ -1380,7 +1616,7 @@ void query::printOccurance_in1pathInternal()
 				if (ranking[i].path != "" || ranking[i].is_Or)
 				{
 					cout << ranking[i].path << endl;
-					Print_process(ranking[i].path);
+					Print_process(ranking[i].path,block[0].rank.is_WildCard);
 					//cout << " occurance:" << ranking[i].occurance_in1path << endl;
 				}
 			}
@@ -1392,7 +1628,7 @@ void query::printOccurance_in1pathInternal()
 				if (ranking[i].is_And)
 				{
 					cout << ranking[i].path << endl;
-					Print_process(ranking[i].path);
+					Print_process(ranking[i].path,block[0].rank.is_WildCard);
 					//cout << " occurance:" << ranking[i].occurance_in1path << endl;
 				}
 			}
@@ -1404,7 +1640,7 @@ void query::printOccurance_in1pathInternal()
 				if (ranking[i].is_And || ranking[i].is_Or)
 				{
 					cout << ranking[i].path << endl;
-					Print_process(ranking[i].path);
+					Print_process(ranking[i].path,block[0].rank.is_WildCard);
 					//cout << " occurance:" << ranking[i].occurance_in1path << endl;
 				}
 			}
@@ -1416,7 +1652,7 @@ void query::printOccurance_in1pathInternal()
 				if ((ranking[i].path != "" && !ranking[i].is_Or) || (ranking[i].is_And&&ranking[i].is_Or))
 				{
 					cout << ranking[i].path << endl;
-					Print_process(ranking[i].path);
+					Print_process(ranking[i].path,block[0].rank.is_WildCard);
 					//cout << " occurance:" << ranking[i].occurance_in1path << endl;
 				}
 			}
@@ -1430,7 +1666,7 @@ void query::printOccurance_in1pathInternal()
 			{
 				cout << ranking[i].path << endl;
 				cout << "/////////////////////////////////////////////////" << endl;
-				Print_process(ranking[i].path);
+				Print_process(ranking[i].path,block[0].rank.is_WildCard);
 				cout << "/////////////////////////////////////////////////" << endl;
 				//cout << " occurance:" << ranking[i].occurance_in1path << endl;
 			}
@@ -1899,10 +2135,50 @@ void query::processFeatureInternal(StopWordChaining stopword)
 					}
 				}
 			}
+			/*Feature 12*/ if (block[i].rank.is_Set)
+			{
+				pathNode *temp = block[i].wordinfo;
+				while (block[i].wordinfo != NULL)
+				{
+					int t = (int(block[i].wordinfo->path.at(16)) - 48) * 10 + int((block[i].wordinfo->path.at(17) - 48));
+					if (block[i].wordinfo->path.at(18) == '0')
+						t = 100;
+					if (!stopword.isStopWord(block[i].s))
+						ranking[t].occurance_in1path += block[i].wordinfo->occurance;
+					ranking[t].path = block[i].wordinfo->path;
+					ranking[t].is_Feature = true;
+					ranking[t].rankingPoint++;
+					block[i].wordinfo = block[i].wordinfo->pnext;
+				}
+				block[i].wordinfo = temp;
+			}
 		}
 	}
 }
 
+//History
+void query::SaveToHistory(std::vector<std::string> &dict)
+{
+	History(dict);
+	return;
+}
+void query::History(std::vector<std::string> &dict)
+{
+	if (num == 0) return;
+	string sentence;
+	for (int i = 0; i < num; i++)
+	{
+		sentence += block[i].s + " ";
+
+	}
+	ofstream fout;
+	fout.open("dict.txt", ios::app);
+	fout << endl;
+	fout << sentence;
+	fout.close();
+	dict.push_back(sentence);
+	return;
+}
 
 //Ranking system
 // Feature 1
@@ -1966,6 +2242,12 @@ bool RankingSystem::isWildCard(string s)
 bool RankingSystem::isInRange(string s)
 {
 	if (s.find("..") != std::string::npos) return true;
+	else return false;
+}
+// Feature 12
+bool RankingSystem::isSet(string s)
+{
+	if (s.find("~") != std::string::npos) return true;
 	else return false;
 }
 
