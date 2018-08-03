@@ -258,3 +258,4 @@ int  HashWord(string s, int i);
 string Dictionary(std::vector<std::string> dict, string input);
 void LoadDictionary(std::vector<std::string> &dict);
 #endif
+ 
