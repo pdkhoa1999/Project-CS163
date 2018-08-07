@@ -102,14 +102,14 @@ void wordTrie::add(string path)
 }
 string wordTrie::takeWord(ifstream &fin, int &n)
 {
-	string word, w;
-	char x;
-	fin >> x;
-	while (!checkValidation(x) && fin)fin >> x;
+	string word;
 	fin >> word;
-	w += x;
-	word.insert(0, w);
 	n = word.length();
+	while (n > 0 && !checkValidation(word[0]))
+	{
+		word.erase(0, 1);
+		n--;
+	}
 	for (int i = 0; i < n; i++)
 	{
 		if (!checkValidation(word[i]))
@@ -118,7 +118,6 @@ string wordTrie::takeWord(ifstream &fin, int &n)
 			n = i;
 		}
 	}
-	ToLower(word);
 	return word;
 }
 void wordTrie::printInternal(wordNode*root, string word)
